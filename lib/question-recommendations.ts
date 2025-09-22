@@ -85,7 +85,7 @@ export async function getQuestionRecommendations(
     
     try {
       const { data, error } = await supabase
-        .from('interview_questions')
+        .from('questions')
         .select('*')
       
       if (error) {
@@ -122,7 +122,7 @@ export async function getQuestionRecommendations(
     // Calculate relevance scores for each question
     const questionsWithScores = questions.map(question => {
       const questionKeywords = extractKeywords(
-        `${question.question_text} ${question.skills} ${question.company}`
+        `${question.question_text} ${question.skills || ''} ${question.company || ''}`
       )
       
       // Calculate base similarity score
@@ -141,12 +141,12 @@ export async function getQuestionRecommendations(
       }
       
       // Apply company matching bonus
-      if (input.company && question.company.toLowerCase().includes(input.company.toLowerCase())) {
+      if (input.company && question.company && question.company.toLowerCase().includes(input.company.toLowerCase())) {
         relevanceScore *= 1.2
       }
       
       // Apply role-specific bonuses
-      const roleBonus = calculateRoleSpecificBonus(normalizedRole, question.question_text, question.skills)
+      const roleBonus = calculateRoleSpecificBonus(normalizedRole, question.question_text, question.skills || '')
       relevanceScore *= roleBonus
       
       // Apply skill weight bonuses
@@ -399,55 +399,52 @@ export function analyzeUserProfile(input: RecommendationInput): {
   }
 }
 
-/**
- * Mock questions for fallback when Supabase is not available
- */
 function getMockQuestions(): InterviewQuestion[] {
   return [
     {
       id: '1',
-      question_text: 'Tell me about a time when you had to prioritize features for a product with limited resources.',
-      company: 'Google',
-      question_type: 'Behavioral',
+      question_text: 'How do you prioritize features when you have limited resources?',
+      company: 'Meta',
+      question_type: 'Product Design',
       difficulty: 'Mid',
-      sample_answer: 'In my previous role at TechCorp, we were launching a new mobile app with a tight deadline and limited engineering resources. I had to prioritize between user authentication, core functionality, and advanced features. I used the RICE framework to evaluate each feature based on reach, impact, confidence, and effort. I prioritized user authentication and core functionality first, then planned advanced features for the next sprint. This approach helped us launch on time while ensuring the most critical user needs were met.',
-      skills: 'prioritization, product strategy, resource management, RICE framework'
+      sample_answer: 'I use a framework like RICE (Reach, Impact, Confidence, Effort) to evaluate features...',
+      skills: 'prioritization, stakeholder management, strategic thinking',
     },
     {
       id: '2',
-      question_text: 'How would you design a feature to increase user engagement on our platform?',
-      company: 'Meta',
-      question_type: 'Product Design',
+      question_text: 'Tell me about a time you had to influence without authority.',
+      company: 'Google',
+      question_type: 'Behavioral',
       difficulty: 'Senior',
-      sample_answer: 'I would start by analyzing current user behavior data to identify drop-off points and engagement patterns. Then I would conduct user interviews to understand pain points and motivations. Based on insights, I would design features like personalized content recommendations, social sharing capabilities, and gamification elements. I would create prototypes, run A/B tests, and iterate based on user feedback and metrics like time spent, return visits, and feature adoption rates.',
-      skills: 'user research, product design, A/B testing, analytics, user engagement'
+      sample_answer: 'In my previous role, I needed to get buy-in from engineering teams...',
+      skills: 'leadership, communication, influence',
     },
     {
       id: '3',
-      question_text: 'Describe a situation where you had to launch a product feature that didn\'t perform as expected.',
-      company: 'Amazon',
-      question_type: 'Behavioral',
+      question_text: 'How would you improve our product discovery process?',
+      company: 'Apple',
+      question_type: 'Product Design',
       difficulty: 'Mid',
-      sample_answer: 'We launched a recommendation engine feature that had low user engagement. I analyzed user behavior data and found that users weren\'t discovering the feature. I worked with the design team to improve the UI placement and with engineering to add onboarding tooltips. We also A/B tested different approaches. After these changes, engagement increased by 40% over the next month.',
-      skills: 'data analysis, cross-functional collaboration, problem solving, A/B testing'
+      sample_answer: 'I would start by understanding the current user journey and identifying pain points...',
+      skills: 'user research, product strategy, analytics',
     },
     {
       id: '4',
-      question_text: 'How would you approach gathering and incorporating user feedback for a new product feature?',
-      company: 'Apple',
-      question_type: 'Product Design',
+      question_text: 'Describe a time when you had to make a decision with incomplete data.',
+      company: 'Amazon',
+      question_type: 'Behavioral',
       difficulty: 'Junior',
-      sample_answer: 'I would start with user interviews to understand pain points, then create prototypes for usability testing. I\'d use surveys for quantitative data and set up analytics to track user behavior. For incorporation, I\'d categorize feedback by impact and feasibility, then work with engineering to prioritize implementation. I\'d also establish a feedback loop to measure the success of changes.',
-      skills: 'user research, prototyping, surveys, analytics, feedback analysis'
+      sample_answer: 'During a product launch, we had limited user feedback but needed to decide on feature scope...',
+      skills: 'decision making, risk assessment, analytical thinking',
     },
     {
       id: '5',
-      question_text: 'Tell me about a time when you had to make a difficult product decision with incomplete information.',
-      company: 'Microsoft',
-      question_type: 'Behavioral',
-      difficulty: 'Senior',
-      sample_answer: 'When deciding whether to sunset an underperforming feature, I had limited usage data due to tracking issues. I conducted rapid user interviews, analyzed support tickets, and ran a small survey. Despite incomplete data, I made the decision to redesign rather than remove the feature, based on qualitative feedback showing user intent. The redesigned feature saw 3x higher engagement within two months.',
-      skills: 'decision making, user research, data analysis, product strategy, risk management'
+      question_text: 'How do you measure the success of a new feature?',
+      company: 'Netflix',
+      question_type: 'Product Design',
+      difficulty: 'Mid',
+      sample_answer: 'I establish both leading and lagging indicators before launch...',
+      skills: 'analytics, metrics, experimentation',
     }
   ]
 }
