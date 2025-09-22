@@ -4,22 +4,25 @@ import type React from "react"
 
 import { useState, useRef } from "react"
 import { ArrowLeft, Upload, Building2, Briefcase } from "lucide-react"
+import type { UserData } from "./app"
 
 interface ResumeUploadProps {
-  onContinue: () => void
+  onContinue: (data: UserData) => void
   onBack: () => void
+  userData: UserData
 }
 
-export default function ResumeUpload({ onContinue, onBack }: ResumeUploadProps) {
-  const [resumeFile, setResumeFile] = useState<File | null>(null)
-  const [company, setCompany] = useState("")
-  const [role, setRole] = useState("")
-  const [jobDescription, setJobDescription] = useState("")
+export default function ResumeUpload({ onContinue, onBack, userData }: ResumeUploadProps) {
+  const [resumeFile, setResumeFile] = useState<File | null>(userData.resumeFile)
+  const [company, setCompany] = useState(userData.company)
+  const [role, setRole] = useState(userData.role)
+  const [jobDescription, setJobDescription] = useState(userData.jobDescription)
   const [dragActive, setDragActive] = useState(false)
-  const [uploadComplete, setUploadComplete] = useState(false)
+  const [uploadComplete, setUploadComplete] = useState(!!userData.resumeFile)
   const [showInterviewDetails, setShowInterviewDetails] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [resumeText, setResumeText] = useState(userData.resumeText)
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -37,6 +40,11 @@ export default function ResumeUpload({ onContinue, onBack }: ResumeUploadProps) 
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0]
+  const extractTextFromFile = async (file: File): Promise<string> => {
+    // For now, return a placeholder. In a real implementation, you'd use a library
+    // like pdf-parse for PDFs or mammoth for Word documents
+    return `Extracted text from ${file.name} - placeholder for actual text extraction`
+  }
       if (
         file.type === "application/pdf" ||
         file.name.endsWith(".pdf") ||
@@ -51,8 +59,10 @@ export default function ResumeUpload({ onContinue, onBack }: ResumeUploadProps) 
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const extractedText = await extractTextFromFile(file)
     if (e.target.files && e.target.files[0]) {
       setResumeFile(e.target.files[0])
+      setResumeText(extractedText)
       setUploadComplete(true)
     }
   }
@@ -63,13 +73,20 @@ export default function ResumeUpload({ onContinue, onBack }: ResumeUploadProps) 
   }
 
   const handleProceedToDetails = () => {
+    setResumeText("")
     setUploadComplete(false)
     setShowInterviewDetails(true)
   }
 
   const isFormValid = resumeFile && company.trim() && role.trim()
-
-  return (
+    const data: UserData = {
+      resumeFile,
+      resumeText,
+      company,
+      role,
+      jobDescription
+    }
+    onContinue(data)
     <div
       className="min-h-screen"
       style={{

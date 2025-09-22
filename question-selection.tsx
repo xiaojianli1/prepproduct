@@ -1,19 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, Filter, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getQuestionRecommendations, type InterviewQuestion } from "@/lib/question-recommendations"
+import type { UserData } from "./app"
 
 interface QuestionSelectionProps {
-  onStartSession?: () => void
+  onStartSession?: (questions: InterviewQuestion[]) => void
   onBack?: () => void // Added onBack prop for navigation
+  userData: UserData
 }
 
-export default function QuestionSelection({ onStartSession, onBack }: QuestionSelectionProps) {
+export default function QuestionSelection({ onStartSession, onBack, userData }: QuestionSelectionProps) {
   const [selectedCategory, setSelectedCategory] = useState("All Categories")
   const [selectedDifficulty, setSelectedDifficulty] = useState("All Levels")
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [allQuestions, setAllQuestions] = useState<InterviewQuestion[]>([])
+  const [recommendedQuestions, setRecommendedQuestions] = useState<InterviewQuestion[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const categories = [
     "All Categories",
@@ -26,91 +33,93 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
   const difficulties = ["All Levels", "Entry Level", "Intermediate", "Advanced"]
 
-  const sampleQuestions = [
-    {
-      id: 1,
-      category: "Product Strategy",
-      difficulty: "Intermediate",
-      title: "Tell me about a time when you had to prioritize features for a product with limited resources.",
-      description:
-        "This question tests your ability to make strategic decisions under constraints and communicate your prioritization framework.",
-      estimatedTime: "3-5 min",
-    },
-    {
-      id: 2,
-      category: "Product Design",
-      difficulty: "Entry Level",
-      title: "How would you improve the user experience of our mobile app?",
-      description: "Demonstrates your user-centric thinking and ability to identify improvement opportunities.",
-      estimatedTime: "4-6 min",
-    },
-    {
-      id: 3,
-      category: "Product Analytics",
-      difficulty: "Advanced",
-      title: "A key metric for our product dropped 15% last week. How would you investigate?",
-      description: "Tests your analytical thinking and systematic approach to problem-solving with data.",
-      estimatedTime: "5-7 min",
-    },
-  ]
+  // Fetch questions when component mounts or user data changes
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      if (!userData.role) return
+      
+      setIsLoading(true)
+      setError(null)
+      
+      try {
+        const recommendations = await getQuestionRecommendations({
+          resumeText: userData.resumeText,
+          jobDescription: userData.jobDescription,
+          roleTitle: userData.role,
+          company: userData.company,
+          maxQuestions: 20
+        })
+        
+        setAllQuestions(recommendations.questions)
+        // Set top 3 as recommended
+        setRecommendedQuestions(recommendations.questions.slice(0, 3))
+      } catch (err) {
+        console.error('Error fetching questions:', err)
+        setError('Failed to load questions. Please try again.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchQuestions()
+  }, [userData.role, userData.company, userData.jobDescription, userData.resumeText])
 
-  const recommendedQuestions = [
-    {
-      id: 1,
-      category: "Product Strategy",
-      difficulty: "Intermediate",
-      title: "Tell me about a time when you had to prioritize features for a product with limited resources.",
-      description:
-        "This question tests your ability to make strategic decisions under constraints and communicate your prioritization framework.",
-      estimatedTime: "3-5 min",
-      reason: "Matches your product management experience",
-    },
-    {
-      id: 4,
-      category: "Leadership & Communication",
-      difficulty: "Intermediate",
-      title:
-        "Tell me about a time when you had to work with engineering and design teams to solve a complex product problem.",
-      description:
-        "Highlight your collaboration skills, communication strategies, and how you facilitated cross-functional alignment.",
-      estimatedTime: "4-6 min",
-      reason: "Based on your cross-functional leadership background",
-    },
-    {
-      id: 6,
-      category: "Product Analytics",
-      difficulty: "Entry Level",
-      title: "How would you measure the success of a new feature launch?",
-      description: "Tests your understanding of metrics, KPIs, and data-driven decision making in product management.",
-      estimatedTime: "3-4 min",
-      reason: "Aligned with your analytical skills",
-    },
-  ]
+  // Map question types to categories
+  const mapQuestionTypeToCategory = (questionType: string): string => {
+    switch (questionType) {
+      case 'Behavioral':
+        return 'Leadership & Communication'
+      case 'Product Design':
+        return 'Product Design'
+      default:
+        return 'Product Strategy'
+    }
+  }
 
+  // Map difficulty levels
+  const mapDifficulty = (difficulty: string): string => {
+    switch (difficulty) {
+      case 'Intern':
+      case 'Junior':
+        return 'Entry Level'
+      case 'Mid':
+        return 'Intermediate'
+      case 'Senior':
+        return 'Advanced'
+      default:
+        return 'Intermediate'
+    }
+  }
   const getFilteredRecommendedQuestions = () => {
     return recommendedQuestions.filter((question) => {
-      const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
-      const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty === selectedDifficulty
+      const questionCategory = mapQuestionTypeToCategory(question.question_type)
+      const questionDifficulty = mapDifficulty(question.difficulty)
+      
+      const categoryMatch = selectedCategory === "All Categories" || questionCategory === selectedCategory
+      const difficultyMatch = selectedDifficulty === "All Levels" || questionDifficulty === selectedDifficulty
       const searchMatch =
         searchQuery === "" ||
-        question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        question.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        question.category.toLowerCase().includes(searchQuery.toLowerCase())
+        question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        question.skills.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        questionCategory.toLowerCase().includes(searchQuery.toLowerCase())
       return categoryMatch && difficultyMatch && searchMatch
     })
   }
 
   const getFilteredQuestions = () => {
-    return sampleQuestions
+    return allQuestions
       .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
       .filter((question) => {
-        const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
-        const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty === selectedDifficulty
+        const questionCategory = mapQuestionTypeToCategory(question.question_type)
+        const questionDifficulty = mapDifficulty(question.difficulty)
+        
+        const categoryMatch = selectedCategory === "All Categories" || questionCategory === selectedCategory
+        const difficultyMatch = selectedDifficulty === "All Levels" || questionDifficulty === selectedDifficulty
         const searchMatch =
           searchQuery === "" ||
-          question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          question.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          question.category.toLowerCase().includes(searchQuery.toLowerCase())
+          question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          question.skills.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          questionCategory.toLowerCase().includes(searchQuery.toLowerCase())
         return categoryMatch && difficultyMatch && searchMatch
       })
   }
@@ -119,6 +128,35 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const showRecommendedSection = selectedCategory === "All Categories" || filteredRecommendedQuestions.length > 0
   const filteredQuestions = getFilteredQuestions()
 
+  const handleStartSession = () => {
+    const selectedQuestionObjects = allQuestions.filter(q => 
+      selectedQuestions.includes(parseInt(q.id))
+    )
+    onStartSession?.(selectedQuestionObjects)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{
+        background: "linear-gradient(180deg, #101010 0%, #0C0C0C 100%)",
+      }}>
+        <div className="text-white text-lg">Loading questions...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{
+        background: "linear-gradient(180deg, #101010 0%, #0C0C0C 100%)",
+      }}>
+        <div className="text-center">
+          <div className="text-red-400 text-lg mb-4">{error}</div>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    )
+  }
   return (
     <div
       className="min-h-screen"
@@ -146,7 +184,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
               <div className="flex flex-col">
                 <h1 className="text-xl font-semibold text-white tracking-tight">Practice Questions</h1>
-                <p className="text-sm text-white/60 font-medium">Google • Product Manager Intern</p>
+                <p className="text-sm text-white/60 font-medium">{userData.company} • {userData.role}</p>
               </div>
             </div>
 
@@ -252,12 +290,12 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 <Button
                   onClick={() => {
                     // Quick start with random selection
-                    const randomQuestions = sampleQuestions
+                    const randomQuestions = allQuestions
                       .sort(() => 0.5 - Math.random())
                       .slice(0, 3) // Changed from selectedCount to fixed value of 3
-                      .map((q) => q.id)
+                      .map((q) => parseInt(q.id))
                     setSelectedQuestions(randomQuestions)
-                    onStartSession?.()
+                    handleStartSession()
                   }}
                   className="w-full py-3 px-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-xs leading-tight"
                   style={{
@@ -365,7 +403,9 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
                 <div className="space-y-4">
                   {filteredRecommendedQuestions.map((question, index) => {
-                    const isSelected = selectedQuestions.includes(question.id)
+                    const isSelected = selectedQuestions.includes(parseInt(question.id))
+                    const questionCategory = mapQuestionTypeToCategory(question.question_type)
+                    const questionDifficulty = mapDifficulty(question.difficulty)
                     return (
                       <div
                         key={`recommended-${index}`}
@@ -383,9 +423,9 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                         }}
                         onClick={() => {
                           setSelectedQuestions((prev) =>
-                            prev.includes(question.id)
-                              ? prev.filter((id) => id !== question.id)
-                              : [...prev, question.id],
+                            prev.includes(parseInt(question.id))
+                              ? prev.filter((id) => id !== parseInt(question.id))
+                              : [...prev, parseInt(question.id)],
                           )
                         }}
                       >
@@ -415,7 +455,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                                 color: "#007AFF",
                               }}
                             >
-                              {question.category}
+                              {questionCategory}
                             </span>
                             <span
                               className="px-3 py-1 rounded-full text-xs font-medium"
@@ -424,17 +464,19 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                                 color: "rgba(255, 255, 255, 0.8)",
                               }}
                             >
-                              {question.difficulty}
+                              {questionDifficulty}
                             </span>
                           </div>
-                          <span className="text-sm text-white/60 font-medium">{question.estimatedTime}</span>
+                          <span className="text-sm text-white/60 font-medium">3-5 min</span>
                         </div>
 
                         <h3 className="text-lg font-semibold text-white mb-3 leading-relaxed tracking-tight">
-                          {question.title}
+                          {question.question_text}
                         </h3>
 
-                        <p className="text-white/70 leading-relaxed text-sm mb-2">{question.description}</p>
+                        <p className="text-white/70 leading-relaxed text-sm mb-2">
+                          Skills: {question.skills}
+                        </p>
 
                         <div className="flex items-center gap-2 text-sm" style={{ fontSize: "0.85rem" }}>
                           <div className="flex items-center gap-1.5 font-medium" style={{ color: "#4A6FA5" }}>
@@ -454,7 +496,9 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                             <span>Recommended</span>
                           </div>
                           <span className="text-white/40">|</span>
-                          <span className="text-white/70 italic">{question.reason}</span>
+                          <span className="text-white/70 italic">
+                            Relevance: {((question.relevance_score || 0) * 100).toFixed(0)}%
+                          </span>
                         </div>
                       </div>
                     )
@@ -466,7 +510,9 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
             {/* Regular Question Preview Cards */}
             <div className="space-y-6">
               {filteredQuestions.map((question, index) => {
-                const isSelected = selectedQuestions.includes(question.id)
+                const isSelected = selectedQuestions.includes(parseInt(question.id))
+                const questionCategory = mapQuestionTypeToCategory(question.question_type)
+                const questionDifficulty = mapDifficulty(question.difficulty)
                 return (
                   <div
                     key={index}
@@ -484,7 +530,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     }}
                     onClick={() => {
                       setSelectedQuestions((prev) =>
-                        prev.includes(question.id) ? prev.filter((id) => id !== question.id) : [...prev, question.id],
+                        prev.includes(parseInt(question.id)) ? prev.filter((id) => id !== parseInt(question.id)) : [...prev, parseInt(question.id)],
                       )
                     }}
                   >
@@ -514,7 +560,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                             color: "#007AFF",
                           }}
                         >
-                          {question.category}
+                          {questionCategory}
                         </span>
                         <span
                           className="px-3 py-1 rounded-full text-xs font-medium"
@@ -523,17 +569,19 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                             color: "rgba(255, 255, 255, 0.8)",
                           }}
                         >
-                          {question.difficulty}
+                          {questionDifficulty}
                         </span>
                       </div>
-                      <span className="text-sm text-white/60 font-medium">{question.estimatedTime}</span>
+                      <span className="text-sm text-white/60 font-medium">3-5 min</span>
                     </div>
 
                     <h3 className="text-lg font-semibold text-white mb-3 leading-relaxed tracking-tight">
-                      {question.title}
+                      {question.question_text}
                     </h3>
 
-                    <p className="text-white/70 leading-relaxed text-sm">{question.description}</p>
+                    <p className="text-white/70 leading-relaxed text-sm">
+                      Skills: {question.skills}
+                    </p>
                   </div>
                 )
               })}
@@ -574,7 +622,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
               </span>
             </div>
             <Button
-              onClick={onStartSession}
+              onClick={handleStartSession}
               className="py-2 px-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-xs leading-tight"
               style={{
                 background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",

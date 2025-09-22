@@ -3,50 +3,16 @@
 import { useState, useEffect, useRef } from "react"
 import { Mic, Square, Play, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import type { InterviewQuestion } from "@/lib/question-recommendations"
 
-// Sample PM interview questions
-const questions = [
-  {
-    id: 1,
-    title:
-      "Tell me about a time when you had to prioritize features for a product with limited resources. How did you approach the decision-making process?",
-    description:
-      "Consider discussing your framework for prioritization, stakeholder management, and the outcome of your decisions.",
-  },
-  {
-    id: 2,
-    title:
-      "Describe a situation where you had to launch a product feature that didn't perform as expected. How did you handle it?",
-    description:
-      "Focus on your analysis process, stakeholder communication, and the steps you took to iterate and improve.",
-  },
-  {
-    id: 3,
-    title: "How would you approach gathering and incorporating user feedback for a new product feature?",
-    description:
-      "Discuss your methods for user research, feedback collection, and how you balance different user needs and business objectives.",
-  },
-  {
-    id: 4,
-    title:
-      "Tell me about a time when you had to work with engineering and design teams to solve a complex product problem.",
-    description:
-      "Highlight your collaboration skills, communication strategies, and how you facilitated cross-functional alignment.",
-  },
-  {
-    id: 5,
-    title: "Describe your approach to defining and measuring success metrics for a product feature.",
-    description:
-      "Explain your framework for setting KPIs, tracking performance, and making data-driven product decisions.",
-  },
-]
 
 interface InterviewCoachProps {
   onBack?: () => void
   onEndSession?: () => void
+  questions: InterviewQuestion[]
 }
 
-export default function Component({ onBack, onEndSession }: InterviewCoachProps) {
+export default function Component({ onBack, onEndSession, questions }: InterviewCoachProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [timeElapsed, setTimeElapsed] = useState(0)
@@ -58,8 +24,23 @@ export default function Component({ onBack, onEndSession }: InterviewCoachProps)
   const frozenWaveformRef = useRef(Array(20).fill(0))
 
   const maxTime = 180 // 3 minutes in seconds
-  const totalQuestions = questions.length
-  const currentQuestion = questions[currentQuestionIndex]
+  const totalQuestions = questions?.length || 0
+  const currentQuestion = questions?.[currentQuestionIndex]
+
+  // Handle case where no questions are provided
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="h-screen flex items-center justify-center" style={{
+        background: "linear-gradient(135deg, #0B0B0F 0%, #0F0F14 25%, #12121A 50%, #0F0F14 75%, #0B0B0F 100%)",
+      }}>
+        <div className="text-center text-white">
+          <h2 className="text-xl font-semibold mb-4">No Questions Selected</h2>
+          <p className="text-white/70 mb-6">Please go back and select some questions to practice with.</p>
+          <Button onClick={onBack}>Go Back</Button>
+        </div>
+      </div>
+    )
+  }
 
   // Handle record button click - now toggles pause/resume when recording
   const handleRecord = () => {
@@ -229,18 +210,18 @@ export default function Component({ onBack, onEndSession }: InterviewCoachProps)
                   boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
                 }}
               >
-                Q{currentQuestion.id}
+                Q{currentQuestionIndex + 1}
               </div>
               <div className="text-xs text-white/60 font-medium tracking-wide">
-                {currentQuestion.id} of {totalQuestions}
+                {currentQuestionIndex + 1} of {totalQuestions}
               </div>
             </div>
             <div className="flex-1 space-y-3">
               <h1 className="text-xl font-semibold text-white leading-relaxed tracking-tight">
-                {currentQuestion.title}
+                {currentQuestion?.question_text}
               </h1>
               <p className="text-sm text-white/70 leading-relaxed tracking-wide font-normal">
-                {currentQuestion.description}
+                Skills: {currentQuestion?.skills}
               </p>
             </div>
           </div>
