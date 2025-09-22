@@ -23,6 +23,13 @@ export default function ResumeUpload({ onContinue, onBack, userData }: ResumeUpl
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [resumeText, setResumeText] = useState(userData.resumeText)
+  
+  const extractTextFromFile = async (file: File): Promise<string> => {
+    // For now, return a placeholder. In a real implementation, you'd use a library
+    // like pdf-parse for PDFs or mammoth for Word documents
+    return `Extracted text from ${file.name} - placeholder for actual text extraction`
+  }
+  
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -33,18 +40,13 @@ export default function ResumeUpload({ onContinue, onBack, userData }: ResumeUpl
     }
   }
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0]
-  const extractTextFromFile = async (file: File): Promise<string> => {
-    // For now, return a placeholder. In a real implementation, you'd use a library
-    // like pdf-parse for PDFs or mammoth for Word documents
-    return `Extracted text from ${file.name} - placeholder for actual text extraction`
-  }
       if (
         file.type === "application/pdf" ||
         file.name.endsWith(".pdf") ||
@@ -52,33 +54,25 @@ export default function ResumeUpload({ onContinue, onBack, userData }: ResumeUpl
         file.name.endsWith(".doc") ||
         file.name.endsWith(".docx")
       ) {
+        const extractedText = await extractTextFromFile(file)
         setResumeFile(file)
+        setResumeText(extractedText)
         setUploadComplete(true)
       }
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const extractedText = await extractTextFromFile(file)
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setResumeFile(e.target.files[0])
+      const file = e.target.files[0]
+      const extractedText = await extractTextFromFile(file)
+      setResumeFile(file)
       setResumeText(extractedText)
       setUploadComplete(true)
     }
   }
 
   const handleContinue = () => {
-    // In a real app, you'd save this data to context or send to backend
-    onContinue()
-  }
-
-  const handleProceedToDetails = () => {
-    setResumeText("")
-    setUploadComplete(false)
-    setShowInterviewDetails(true)
-  }
-
-  const isFormValid = resumeFile && company.trim() && role.trim()
     const data: UserData = {
       resumeFile,
       resumeText,
@@ -87,6 +81,15 @@ export default function ResumeUpload({ onContinue, onBack, userData }: ResumeUpl
       jobDescription
     }
     onContinue(data)
+  }
+
+  const handleProceedToDetails = () => {
+    setShowInterviewDetails(true)
+  }
+
+  const isFormValid = resumeFile && company.trim() && role.trim()
+
+  return (
     <div
       className="min-h-screen"
       style={{
@@ -316,7 +319,7 @@ export default function ResumeUpload({ onContinue, onBack, userData }: ResumeUpl
           )}
         </div>
 
-        {uploadComplete && (
+        {uploadComplete && !showInterviewDetails && (
           <div className="mt-8 flex justify-center">
             <button
               onClick={handleProceedToDetails}
