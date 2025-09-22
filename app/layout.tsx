@@ -30,15 +30,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <style>{`
-html {
-  font-family: ${dmSans.style.fontFamily};
-  --font-sans: ${dmSans.variable};
-  --font-secondary: ${ibmPlexSans.variable};
-}
-        `}</style>
-      </head>
       <body className={`${dmSans.variable} ${ibmPlexSans.variable} antialiased`}>{children}</body>
     </html>
   )
