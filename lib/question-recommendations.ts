@@ -398,3 +398,56 @@ export function analyzeUserProfile(input: RecommendationInput): {
     roleAlignment
   }
 }
+
+/**
+ * Mock questions for fallback when Supabase is not available
+ */
+function getMockQuestions(): InterviewQuestion[] {
+  return [
+    {
+      id: '1',
+      question_text: 'Tell me about a time when you had to prioritize features for a product with limited resources.',
+      company: 'Google',
+      question_type: 'Behavioral',
+      difficulty: 'Mid',
+      sample_answer: 'In my previous role at TechCorp, we were launching a new mobile app with a tight deadline and limited engineering resources. I had to prioritize between user authentication, core functionality, and advanced features. I used the RICE framework to evaluate each feature based on reach, impact, confidence, and effort. I prioritized user authentication and core functionality first, then planned advanced features for the next sprint. This approach helped us launch on time while ensuring the most critical user needs were met.',
+      skills: 'prioritization, product strategy, resource management, RICE framework'
+    },
+    {
+      id: '2',
+      question_text: 'How would you design a feature to increase user engagement on our platform?',
+      company: 'Meta',
+      question_type: 'Product Design',
+      difficulty: 'Senior',
+      sample_answer: 'I would start by analyzing current user behavior data to identify drop-off points and engagement patterns. Then I would conduct user interviews to understand pain points and motivations. Based on insights, I would design features like personalized content recommendations, social sharing capabilities, and gamification elements. I would create prototypes, run A/B tests, and iterate based on user feedback and metrics like time spent, return visits, and feature adoption rates.',
+      skills: 'user research, product design, A/B testing, analytics, user engagement'
+    },
+    {
+      id: '3',
+      question_text: 'Describe a situation where you had to launch a product feature that didn\'t perform as expected.',
+      company: 'Amazon',
+      question_type: 'Behavioral',
+      difficulty: 'Mid',
+      sample_answer: 'We launched a recommendation engine feature that had low user engagement. I analyzed user behavior data and found that users weren\'t discovering the feature. I worked with the design team to improve the UI placement and with engineering to add onboarding tooltips. We also A/B tested different approaches. After these changes, engagement increased by 40% over the next month.',
+      skills: 'data analysis, cross-functional collaboration, problem solving, A/B testing'
+    },
+    {
+      id: '4',
+      question_text: 'How would you approach gathering and incorporating user feedback for a new product feature?',
+      company: 'Apple',
+      question_type: 'Product Design',
+      difficulty: 'Junior',
+      sample_answer: 'I would start with user interviews to understand pain points, then create prototypes for usability testing. I\'d use surveys for quantitative data and set up analytics to track user behavior. For incorporation, I\'d categorize feedback by impact and feasibility, then work with engineering to prioritize implementation. I\'d also establish a feedback loop to measure the success of changes.',
+      skills: 'user research, prototyping, surveys, analytics, feedback analysis'
+    },
+    {
+      id: '5',
+      question_text: 'Tell me about a time when you had to make a difficult product decision with incomplete information.',
+      company: 'Microsoft',
+      question_type: 'Behavioral',
+      difficulty: 'Senior',
+      sample_answer: 'When deciding whether to sunset an underperforming feature, I had limited usage data due to tracking issues. I conducted rapid user interviews, analyzed support tickets, and ran a small survey. Despite incomplete data, I made the decision to redesign rather than remove the feature, based on qualitative feedback showing user intent. The redesigned feature saw 3x higher engagement within two months.',
+      skills: 'decision making, user research, data analysis, product strategy, risk management'
+    }
+  ]
+}
