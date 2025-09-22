@@ -80,16 +80,29 @@ export async function getQuestionRecommendations(
     const suggestedDifficulty = determineDifficulty(input.roleTitle, input.experienceLevel)
     const categorizedSkills = categorizeSkills(userKeywordArray)
     
-    // Fetch all questions from database
-    const { data: questions, error } = await supabase
-      .from('interview_questions')
-      .select('*')
+    // Try to fetch questions from database, fallback to mock data if it fails
+    let questions: InterviewQuestion[] = []
     
-    if (error) {
-      throw new Error(`Failed to fetch questions: ${error.message}`)
+    try {
+      const { data, error } = await supabase
+        .from('interview_questions')
+        .select('*')
+      
+      if (error) {
+        console.warn('Supabase fetch failed, using mock data:', error.message)
+        questions = getMockQuestions()
+      } else if (data && data.length > 0) {
+        questions = data
+      } else {
+        console.warn('No questions found in database, using mock data')
+        questions = getMockQuestions()
+      }
+    } catch (fetchError) {
+      console.warn('Database connection failed, using mock data:', fetchError)
+      questions = getMockQuestions()
     }
     
-    if (!questions || questions.length === 0) {
+    if (questions.length === 0) {
       return {
         questions: [],
         userProfile: {
