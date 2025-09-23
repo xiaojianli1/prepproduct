@@ -21,6 +21,8 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
   const [recommendedQuestions, setRecommendedQuestions] = useState<InterviewQuestion[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [displayedQuestionsCount, setDisplayedQuestionsCount] = useState(10)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   const categories = [
     "All Categories",
@@ -94,6 +96,7 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
   const getFilteredQuestions = () => {
     return allQuestions
       .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
+      .slice(0, displayedQuestionsCount)
       .filter((question) => {
         const questionCategory = mapQuestionTypeToCategory(question.question_type)
         const questionDifficulty = mapDifficulty(question.difficulty)
@@ -119,6 +122,17 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
     )
     onStartSession?.(selectedQuestionObjects)
   }
+
+  const handleLoadMore = async () => {
+    setIsLoadingMore(true)
+    // Simulate loading delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 500))
+    setDisplayedQuestionsCount(prev => prev + 10)
+    setIsLoadingMore(false)
+  }
+
+  const totalAvailableQuestions = allQuestions.filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id)).length
+  const hasMoreQuestions = displayedQuestionsCount < totalAvailableQuestions
 
   if (isLoading) {
     return (
@@ -409,8 +423,8 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
                         onClick={() => {
                           setSelectedQuestions((prev) =>
                             prev.includes(parseInt(question.id))
-                              ? prev.filter((id) => id !== parseInt(question.id))
-                              : [...prev, parseInt(question.id)],
+                              ? prev.filter((id) => id !== parseInt(question.id)) 
+                              : [...prev, parseInt(question.id)]
                           )
                         }}
                       >
@@ -573,16 +587,23 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
             </div>
 
             <div className="mt-12 mb-32 text-center">
-              <Button
-                variant="ghost"
-                className="px-6 py-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-sm border border-white/20 hover:border-white/30"
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  color: "rgba(255, 255, 255, 0.9)",
-                }}
-              >
-                Load More Questions
-              </Button>
+              {hasMoreQuestions && (
+                <Button
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  variant="ghost"
+                  className="px-6 py-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-sm border border-white/20 hover:border-white/30 disabled:opacity-50"
+                  style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.05)",
+                    color: "rgba(255, 255, 255, 0.9)",
+                  }}
+                >
+                  {isLoadingMore ? "Loading..." : "Load More Questions"}
+                </Button>
+              )}
+              {!hasMoreQuestions && filteredQuestions.length > 0 && (
+                <p className="text-white/60 text-sm">All questions loaded</p>
+              )}
             </div>
           </div>
         </div>
