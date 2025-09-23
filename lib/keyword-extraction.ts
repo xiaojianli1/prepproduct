@@ -149,6 +149,7 @@ const ROLE_MAPPINGS: Record<string, string> = {
 const SENIORITY_KEYWORDS = {
   intern: ['intern', 'internship', 'student', 'entry level', 'graduate', 'new grad'],
   junior: ['junior', 'associate', 'entry', 'level 1', 'l1', 'i', '0-2 years'],
+  associate: ['associate', 'junior', 'entry', 'level 1', 'l1', 'i', '0-2 years'],
   mid: ['mid', 'intermediate', 'level 2', 'l2', 'ii', '2-5 years', '3-6 years'],
   senior: ['senior', 'sr', 'lead', 'principal', 'staff', 'level 3', 'l3', 'iii', 
            '5+ years', '6+ years', '7+ years', 'experienced', 'expert']
