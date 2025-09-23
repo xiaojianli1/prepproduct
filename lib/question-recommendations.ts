@@ -57,22 +57,29 @@ export interface RecommendationResult {
 export async function getQuestionRecommendations(
   input: RecommendationInput
 ): Promise<RecommendationResult> {
-  // Extract user keywords and profile information
-  const userKeywords = new Set<string>()
-  
-  if (input.resumeText) {
-    extractKeywords(input.resumeText).forEach(keyword => userKeywords.add(keyword))
-  }
-  if (input.jobDescription) {
-    extractKeywords(input.jobDescription).forEach(keyword => userKeywords.add(keyword))
-  }
-  
-  const userKeywordArray = Array.from(userKeywords)
-  const categorizedSkills = categorizeSkills(userKeywordArray)
-  const normalizedRole = normalizeRole(input.roleTitle)
-  const suggestedDifficulty = determineDifficulty(input.experienceLevel || 'Mid')
-  
   try {
+    // Extract and analyze user profile
+    const userKeywords = new Set<string>()
+    
+    // Extract keywords from all available text sources
+    if (input.resumeText) {
+      extractKeywords(input.resumeText).forEach(keyword => userKeywords.add(keyword))
+    }
+    if (input.jobDescription) {
+      extractKeywords(input.jobDescription).forEach(keyword => userKeywords.add(keyword))
+    }
+    if (input.roleTitle) {
+      extractKeywords(input.roleTitle).forEach(keyword => userKeywords.add(keyword))
+    }
+    if (input.company) {
+      extractKeywords(input.company).forEach(keyword => userKeywords.add(keyword))
+    }
+    
+    const userKeywordArray = Array.from(userKeywords)
+    const normalizedRole = normalizeRole(input.roleTitle)
+    const suggestedDifficulty = determineDifficulty(input.roleTitle, input.experienceLevel)
+    const categorizedSkills = categorizeSkills(userKeywordArray)
+    
     // Try to fetch questions from database, fallback to mock data if it fails
     let questions: InterviewQuestion[] = []
     
@@ -87,21 +94,18 @@ export async function getQuestionRecommendations(
       } else if (data && data.length > 0) {
         // Map database columns to interface properties
         questions = data.map(item => ({
-          id: item.id?.toString() || '0',
-          question_text: item.question_text || '',
-          company: item.company || '',
-          question_type: item.question_type || 'Behavioral',
-          difficulty: item.difficulty_level || 'Mid',
-          sample_answer: item.sample_answer || '',
-          skills: item.skills || ''
+          ...item,
+          difficulty: item.difficulty_level as 'Intern' | 'Junior' | 'Mid' | 'Senior',
+          // Remove difficulty_level from the final object since we've mapped it to difficulty
+          difficulty_level: undefined
         }))
       } else {
-        console.warn('No questions found in database')
+        console.warn('No questions found in database, using mock data')
         questions = getMockQuestions()
       }
     } catch (fetchError) {
-      console.error('Supabase connection failed:', fetchError)
-      console.error('Full error:', JSON.stringify(fetchError, null, 2))
+      // Network/CORS error - use mock data silently
+      console.warn('Database connection unavailable, using mock data')
       questions = getMockQuestions()
     }
     
@@ -119,101 +123,6 @@ export async function getQuestionRecommendations(
           averageRelevanceScore: 0,
           topSkillMatches: []
         }
-      }
-    }
-    
-    // Calculate relevance scores for each question
-    const questionsWithScores = questions.map(question => {
-      const questionKeywords = extractKeywords(
-        `${question.question_text} ${question.skills || ''} ${question.company || ''}`
-      )
-      
-      // Calculate base similarity score
-      let relevanceScore = calculateKeywordSimilarity(userKeywordArray, questionKeywords)
-      
-      // Apply difficulty matching bonus
-      if (question.difficulty === suggestedDifficulty) {
-        relevanceScore *= 1.3
-      } else if (
-        (question.difficulty === 'Junior' && suggestedDifficulty === 'Mid') ||
-        (question.difficulty === 'Mid' && suggestedDifficulty === 'Junior') ||
-        (question.difficulty === 'Mid' && suggestedDifficulty === 'Senior') ||
-        (question.difficulty === 'Senior' && suggestedDifficulty === 'Mid')
-      ) {
-        relevanceScore *= 1.1 // Adjacent difficulty levels get slight bonus
-      }
-      
-      // Apply company matching bonus
-      if (input.company && question.company && question.company.toLowerCase().includes(input.company.toLowerCase())) {
-        relevanceScore *= 1.2
-      }
-      
-      // Apply role-specific bonuses
-      const roleBonus = calculateRoleSpecificBonus(normalizedRole, question.question_text, question.skills || '')
-      relevanceScore *= roleBonus
-      
-      // Apply skill weight bonuses
-      const skillWeightBonus = questionKeywords.reduce((bonus, keyword) => {
-        if (userKeywords.has(keyword)) {
-          return bonus + (getSkillWeight(keyword) - 1) * 0.1
-        }
-        return bonus
-      }, 1)
-      relevanceScore *= skillWeightBonus
-      
-      return {
-        ...question,
-        keywords: questionKeywords,
-        relevance_score: Math.min(relevanceScore, 1) // Cap at 1.0
-      }
-    })
-    
-    // Filter by question type preferences if specified
-    let filteredQuestions = questionsWithScores
-    if (input.preferredQuestionTypes && input.preferredQuestionTypes.length > 0) {
-      filteredQuestions = questionsWithScores.filter(q => 
-        input.preferredQuestionTypes!.includes(q.question_type)
-      )
-    }
-    
-    // Sort by relevance score and limit results
-    const sortedQuestions = filteredQuestions
-      .sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0))
-      .slice(0, input.maxQuestions || 10)
-    
-    // Calculate matching statistics
-    const totalQuestionsAnalyzed = filteredQuestions.length
-    const averageRelevanceScore = filteredQuestions.reduce(
-      (sum, q) => sum + (q.relevance_score || 0), 0
-    ) / totalQuestionsAnalyzed
-    
-    // Find top skill matches
-    const skillMatchCounts = new Map<string, number>()
-    sortedQuestions.forEach(question => {
-      question.keywords?.forEach(keyword => {
-        if (userKeywords.has(keyword)) {
-          skillMatchCounts.set(keyword, (skillMatchCounts.get(keyword) || 0) + 1)
-        }
-      })
-    })
-    
-    const topSkillMatches = Array.from(skillMatchCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([skill]) => skill)
-    
-    return {
-      questions: sortedQuestions,
-      userProfile: {
-        normalizedRole,
-        suggestedDifficulty,
-        extractedSkills: categorizedSkills,
-        totalKeywords: userKeywordArray.length
-      },
-      matchingStats: {
-        totalQuestionsAnalyzed,
-        averageRelevanceScore,
-        topSkillMatches
       }
     }
     
