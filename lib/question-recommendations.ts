@@ -85,8 +85,8 @@ export async function getQuestionRecommendations(
     
     try {
       const { data, error } = await supabase
-        .from('questions')
-        .select('id, question_text, company, question_type, difficulty_level, sample_answer, skills')
+        .from('Questions')
+        .select('uuid, question_text, company, question_type, difficulty_level, sample_answer, skills')
       
       if (error) {
         console.warn('Supabase query error, using mock data')
@@ -94,10 +94,13 @@ export async function getQuestionRecommendations(
       } else if (data && data.length > 0) {
         // Map database columns to interface properties
         questions = data.map(item => ({
-          ...item,
+          id: item.uuid,
+          question_text: item.question_text,
+          company: item.company,
+          question_type: item.question_type as 'Behavioral' | 'Product Design',
           difficulty: item.difficulty_level as 'Intern' | 'Junior' | 'Mid' | 'Senior',
-          // Remove difficulty_level from the final object since we've mapped it to difficulty
-          difficulty_level: undefined
+          sample_answer: item.sample_answer,
+          skills: item.skills
         }))
       } else {
         console.warn('No questions found in database, using mock data')
@@ -303,7 +306,7 @@ export async function getQuestionsByFilters(filters: {
   limit?: number
 }): Promise<InterviewQuestion[]> {
   try {
-    let query = supabase.from('questions').select('*')
+    let query = supabase.from('Questions').select('*')
     
     if (filters.difficulty && filters.difficulty.length > 0) {
       query = query.in('difficulty_level', filters.difficulty)
@@ -335,9 +338,13 @@ export async function getQuestionsByFilters(filters: {
     
     // Map database columns to interface properties
     return (data || []).map(item => ({
-      ...item,
+      id: item.uuid,
+      question_text: item.question_text,
+      company: item.company,
+      question_type: item.question_type as 'Behavioral' | 'Product Design',
       difficulty: item.difficulty_level as 'Intern' | 'Junior' | 'Mid' | 'Senior',
-      difficulty_level: undefined
+      sample_answer: item.sample_answer,
+      skills: item.skills
     }))
     
   } catch (error) {

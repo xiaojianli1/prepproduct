@@ -10,7 +10,7 @@ export async function testSupabaseConnection() {
     
     // Test 2: Simple query to check connection
     const { data, error, count } = await supabase
-      .from('questions')
+      .from('Questions')
       .select('*', { count: 'exact' })
       .limit(1)
     
