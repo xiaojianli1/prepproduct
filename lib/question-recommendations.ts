@@ -89,7 +89,7 @@ export async function getQuestionRecommendations(
         .select('id, question_text, company, question_type, difficulty_level, sample_answer, skills')
       
       if (error) {
-        console.warn('Supabase query error, using mock data:', error.message)
+        console.warn('Supabase query error, using mock data')
         questions = getMockQuestions()
       } else if (data && data.length > 0) {
         // Map difficulty_level to difficulty to match our interface
@@ -102,8 +102,8 @@ export async function getQuestionRecommendations(
         questions = getMockQuestions()
       }
     } catch (fetchError) {
-      // Suppress the fetch error from being logged as it's already handled
-      console.warn('Database connection failed (network/CORS issue), using mock data')
+      // Network/CORS error - use mock data silently
+      console.warn('Database connection unavailable, using mock data')
       questions = getMockQuestions()
     }
     

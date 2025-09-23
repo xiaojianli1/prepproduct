@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { ArrowLeft, Filter, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getQuestionRecommendations, type InterviewQuestion } from "@/lib/question-recommendations"
-import { testSupabaseConnection } from "@/lib/test-supabase"
 import type { UserData } from "./app"
 
 interface QuestionSelectionProps {
@@ -39,20 +38,11 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
     const fetchQuestions = async () => {
       if (!userData.role) return
       
-      // Test Supabase connection first
-      console.log('Testing Supabase connection...')
-      const connectionTest = await testSupabaseConnection()
-      console.log('Connection test result:', connectionTest)
-      
-      if (!connectionTest.success) {
-        console.error('Supabase connection failed:', connectionTest.error)
-        setError('Database connection failed. Using mock data.')
-      }
-      
       setIsLoading(true)
       setError(null)
       
       try {
+        console.log('Fetching question recommendations...')
         const recommendations = await getQuestionRecommendations({
           resumeText: userData.resumeText,
           jobDescription: userData.jobDescription,
@@ -66,7 +56,7 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
         setRecommendedQuestions(recommendations.questions.slice(0, 3))
       } catch (err) {
         console.error('Error fetching questions:', err)
-        setError('Failed to load questions. Please try again.')
+        setError('Using mock data - database connection unavailable.')
       } finally {
         setIsLoading(false)
       }
