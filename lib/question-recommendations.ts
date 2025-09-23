@@ -57,8 +57,22 @@ export interface RecommendationResult {
 export async function getQuestionRecommendations(
   input: RecommendationInput
 ): Promise<RecommendationResult> {
-        console.log('Sample data:', data[0])
-        
+  // Extract user keywords and profile information
+  const userKeywords = new Set<string>()
+  
+  if (input.resumeText) {
+    extractKeywords(input.resumeText).forEach(keyword => userKeywords.add(keyword))
+  }
+  if (input.jobDescription) {
+    extractKeywords(input.jobDescription).forEach(keyword => userKeywords.add(keyword))
+  }
+  
+  const userKeywordArray = Array.from(userKeywords)
+  const categorizedSkills = categorizeSkills(userKeywordArray)
+  const normalizedRole = normalizeRole(input.roleTitle)
+  const suggestedDifficulty = determineDifficulty(input.experienceLevel || 'Mid')
+  
+  try {
     // Try to fetch questions from database, fallback to mock data if it fails
     let questions: InterviewQuestion[] = []
     
@@ -105,6 +119,101 @@ export async function getQuestionRecommendations(
           averageRelevanceScore: 0,
           topSkillMatches: []
         }
+      }
+    }
+    
+    // Calculate relevance scores for each question
+    const questionsWithScores = questions.map(question => {
+      const questionKeywords = extractKeywords(
+        `${question.question_text} ${question.skills || ''} ${question.company || ''}`
+      )
+      
+      // Calculate base similarity score
+      let relevanceScore = calculateKeywordSimilarity(userKeywordArray, questionKeywords)
+      
+      // Apply difficulty matching bonus
+      if (question.difficulty === suggestedDifficulty) {
+        relevanceScore *= 1.3
+      } else if (
+        (question.difficulty === 'Junior' && suggestedDifficulty === 'Mid') ||
+        (question.difficulty === 'Mid' && suggestedDifficulty === 'Junior') ||
+        (question.difficulty === 'Mid' && suggestedDifficulty === 'Senior') ||
+        (question.difficulty === 'Senior' && suggestedDifficulty === 'Mid')
+      ) {
+        relevanceScore *= 1.1 // Adjacent difficulty levels get slight bonus
+      }
+      
+      // Apply company matching bonus
+      if (input.company && question.company && question.company.toLowerCase().includes(input.company.toLowerCase())) {
+        relevanceScore *= 1.2
+      }
+      
+      // Apply role-specific bonuses
+      const roleBonus = calculateRoleSpecificBonus(normalizedRole, question.question_text, question.skills || '')
+      relevanceScore *= roleBonus
+      
+      // Apply skill weight bonuses
+      const skillWeightBonus = questionKeywords.reduce((bonus, keyword) => {
+        if (userKeywords.has(keyword)) {
+          return bonus + (getSkillWeight(keyword) - 1) * 0.1
+        }
+        return bonus
+      }, 1)
+      relevanceScore *= skillWeightBonus
+      
+      return {
+        ...question,
+        keywords: questionKeywords,
+        relevance_score: Math.min(relevanceScore, 1) // Cap at 1.0
+      }
+    })
+    
+    // Filter by question type preferences if specified
+    let filteredQuestions = questionsWithScores
+    if (input.preferredQuestionTypes && input.preferredQuestionTypes.length > 0) {
+      filteredQuestions = questionsWithScores.filter(q => 
+        input.preferredQuestionTypes!.includes(q.question_type)
+      )
+    }
+    
+    // Sort by relevance score and limit results
+    const sortedQuestions = filteredQuestions
+      .sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0))
+      .slice(0, input.maxQuestions || 10)
+    
+    // Calculate matching statistics
+    const totalQuestionsAnalyzed = filteredQuestions.length
+    const averageRelevanceScore = filteredQuestions.reduce(
+      (sum, q) => sum + (q.relevance_score || 0), 0
+    ) / totalQuestionsAnalyzed
+    
+    // Find top skill matches
+    const skillMatchCounts = new Map<string, number>()
+    sortedQuestions.forEach(question => {
+      question.keywords?.forEach(keyword => {
+        if (userKeywords.has(keyword)) {
+          skillMatchCounts.set(keyword, (skillMatchCounts.get(keyword) || 0) + 1)
+        }
+      })
+    })
+    
+    const topSkillMatches = Array.from(skillMatchCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([skill]) => skill)
+    
+    return {
+      questions: sortedQuestions,
+      userProfile: {
+        normalizedRole,
+        suggestedDifficulty,
+        extractedSkills: categorizedSkills,
+        totalKeywords: userKeywordArray.length
+      },
+      matchingStats: {
+        totalQuestionsAnalyzed,
+        averageRelevanceScore,
+        topSkillMatches
       }
     }
     
