@@ -292,7 +292,7 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
                     const randomQuestions = allQuestions
                       .sort(() => 0.5 - Math.random())
                       .slice(0, 3) // Changed from selectedCount to fixed value of 3
-                      .map((q) => parseInt(q.id))
+                      .map((q) => q.id)
                     setSelectedQuestions(randomQuestions)
                     handleStartSession()
                   }}
