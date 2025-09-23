@@ -57,6 +57,41 @@ export interface RecommendationResult {
 export async function getQuestionRecommendations(
   input: RecommendationInput
 ): Promise<RecommendationResult> {
+  try {
+    // Extract and process user keywords
+    const userKeywords = new Set<string>()
+    
+    if (input.resumeText) {
+      extractKeywords(input.resumeText).forEach(keyword => userKeywords.add(keyword))
+    }
+    if (input.jobDescription) {
+      extractKeywords(input.jobDescription).forEach(keyword => userKeywords.add(keyword))
+    }
+    
+    const userKeywordArray = Array.from(userKeywords)
+    const categorizedSkills = categorizeSkills(userKeywordArray)
+    const normalizedRole = normalizeRole(input.roleTitle)
+    const suggestedDifficulty = determineDifficulty(input.experienceLevel)
+    
+    // Fetch questions from database
+    let questions: InterviewQuestion[] = []
+    
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .limit(100) // Reasonable limit for processing
+      
+      if (error) {
+        throw error
+      }
+      
+      if (data && data.length > 0) {
+        // Map database columns to interface properties
+        questions = data.map(item => ({
+          ...item,
+          difficulty: item.difficulty_level as 'Intern' | 'Junior' | 'Mid' | 'Senior',
+          difficulty_level: undefined
         }))
       } else {
         console.warn('No questions found in database')
