@@ -57,29 +57,8 @@ export interface RecommendationResult {
 export async function getQuestionRecommendations(
   input: RecommendationInput
 ): Promise<RecommendationResult> {
-  try {
-    // Extract and analyze user profile
-    const userKeywords = new Set<string>()
-    
-    // Extract keywords from all available text sources
-    if (input.resumeText) {
-      extractKeywords(input.resumeText).forEach(keyword => userKeywords.add(keyword))
-    }
-    if (input.jobDescription) {
-      extractKeywords(input.jobDescription).forEach(keyword => userKeywords.add(keyword))
-    }
-    if (input.roleTitle) {
-      extractKeywords(input.roleTitle).forEach(keyword => userKeywords.add(keyword))
-    }
-    if (input.company) {
-      extractKeywords(input.company).forEach(keyword => userKeywords.add(keyword))
-    }
-    
-    const userKeywordArray = Array.from(userKeywords)
-    const normalizedRole = normalizeRole(input.roleTitle)
-    const suggestedDifficulty = determineDifficulty(input.roleTitle, input.experienceLevel)
-    const categorizedSkills = categorizeSkills(userKeywordArray)
-    
+        console.log('Sample data:', data[0])
+        
     // Try to fetch questions from database, fallback to mock data if it fails
     let questions: InterviewQuestion[] = []
     
@@ -94,18 +73,21 @@ export async function getQuestionRecommendations(
       } else if (data && data.length > 0) {
         // Map database columns to interface properties
         questions = data.map(item => ({
-          ...item,
-          difficulty: item.difficulty_level as 'Intern' | 'Junior' | 'Mid' | 'Senior',
-          // Remove difficulty_level from the final object since we've mapped it to difficulty
-          difficulty_level: undefined
+          id: item.id?.toString() || '0',
+          question_text: item.question_text || '',
+          company: item.company || '',
+          question_type: item.question_type || 'Behavioral',
+          difficulty: item.difficulty_level || 'Mid',
+          sample_answer: item.sample_answer || '',
+          skills: item.skills || ''
         }))
       } else {
-        console.warn('No questions found in database, using mock data')
+        console.warn('No questions found in database')
         questions = getMockQuestions()
       }
     } catch (fetchError) {
-      // Network/CORS error - use mock data silently
-      console.warn('Database connection unavailable, using mock data')
+      console.error('Supabase connection failed:', fetchError)
+      console.error('Full error:', JSON.stringify(fetchError, null, 2))
       questions = getMockQuestions()
     }
     
