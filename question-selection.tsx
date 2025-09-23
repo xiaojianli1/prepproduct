@@ -15,7 +15,7 @@ interface QuestionSelectionProps {
 export default function QuestionSelection({ onStartSession, onBack, userData }: QuestionSelectionProps) {
   const [selectedCategory, setSelectedCategory] = useState("All Categories")
   const [selectedDifficulty, setSelectedDifficulty] = useState("All Levels")
-  const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [allQuestions, setAllQuestions] = useState<InterviewQuestion[]>([])
   const [recommendedQuestions, setRecommendedQuestions] = useState<InterviewQuestion[]>([])
@@ -118,7 +118,7 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
 
   const handleStartSession = () => {
     const selectedQuestionObjects = allQuestions.filter(q => 
-      selectedQuestions.includes(parseInt(q.id))
+      selectedQuestions.includes(q.id)
     )
     onStartSession?.(selectedQuestionObjects)
   }
@@ -173,7 +173,7 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
                 variant="ghost"
                 onClick={onBack} // Added onClick handler for back navigation
                 className="w-12 h-12 rounded-xl backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300"
-                style={{
+                    .map((q) => q.id)
                   backgroundColor: "rgba(255, 255, 255, 0.05)",
                   boxShadow: "0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                 }}
@@ -433,10 +433,10 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
                             {/* Checkbox */}
                             <div
                               className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                                isSelected ? "bg-blue-500 border-blue-500" : "border-white/30 hover:border-white/50"
+                                selectedQuestions.includes(question.id) ? "bg-blue-500 border-blue-500" : "border-white/30 hover:border-white/50"
                               }`}
                             >
-                              {isSelected && (
+                              {selectedQuestions.includes(question.id) && (
                                 <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                   <path
                                     fillRule="evenodd"
@@ -509,29 +509,29 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
             {/* Regular Question Preview Cards */}
             <div className="space-y-6">
               {filteredQuestions.map((question, index) => {
-                const isSelected = selectedQuestions.includes(parseInt(question.id))
+                const isSelected = selectedQuestions.includes(question.id)
                 const questionCategory = mapQuestionTypeToCategory(question.question_type)
                 const questionDifficulty = mapDifficulty(question.difficulty)
                 return (
                   <div
                     key={index}
                     className={`rounded-2xl p-6 backdrop-blur-3xl border transition-all duration-300 cursor-pointer shadow-xl hover:shadow-2xl ${
-                      isSelected ? "border-blue-500/50" : "border-white/15 hover:border-white/25"
+                      selectedQuestions.includes(question.id) ? "border-blue-500/50" : "border-white/15 hover:border-white/25"
                     }`}
                     style={{
-                      backgroundColor: isSelected ? "rgba(0, 122, 255, 0.08)" : "rgba(255, 255, 255, 0.03)",
+                      backgroundColor: selectedQuestions.includes(question.id) ? "rgba(0, 122, 255, 0.12)" : "rgba(255, 255, 255, 0.06)",
                       boxShadow: isSelected
                         ? "0 8px 24px rgba(0, 122, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05)"
                         : "0 4px 12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
-                      background: isSelected
+                      background: selectedQuestions.includes(question.id)
                         ? "linear-gradient(135deg, rgba(0, 122, 255, 0.08) 0%, rgba(0, 122, 255, 0.04) 100%)"
                         : "linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)",
                     }}
                     onClick={() => {
                       setSelectedQuestions((prev) =>
-                        prev.includes(parseInt(question.id)) ? prev.filter((id) => id !== parseInt(question.id)) : [...prev, parseInt(question.id)],
-                      )
-                    }}
+                        prev.includes(question.id) ? prev.filter((id) => id !== question.id) : [...prev, question.id],
+                          ? prev.filter((id) => id !== question.id) 
+                          : [...prev, question.id]
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
