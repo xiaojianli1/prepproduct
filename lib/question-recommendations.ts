@@ -12,8 +12,8 @@ export interface InterviewQuestion {
   id: string
   question_text: string
   company: string
-  question_type: 'Behavioral' | 'Product Design'
-  difficulty: 'Intern' | 'Junior' | 'Mid' | 'Senior'
+  question_type: 'Behavioral' | 'Product Design' | 'Metrics & Goals' | 'Root Cause Analysis'
+  difficulty: 'Intern' | 'Associate' | 'Mid' | 'Senior' | 'Any'
   sample_answer: string
   skills: string
   keywords?: string[]
@@ -97,8 +97,8 @@ export async function getQuestionRecommendations(
           id: item.id,
           question_text: item.question_text,
           company: item.company,
-          question_type: item.question_type as 'Behavioral' | 'Product Design',
-          difficulty: item.difficulty_level as 'Intern' | 'Junior' | 'Mid' | 'Senior',
+          question_type: item.question_type as 'Behavioral' | 'Product Design' | 'Metrics & Goals' | 'Root Cause Analysis',
+          difficulty: item.difficulty_level as 'Intern' | 'Associate' | 'Mid' | 'Senior' | 'Any',
           sample_answer: item.sample_answer,
           skills: item.skills
         }))
@@ -341,8 +341,8 @@ export async function getQuestionsByFilters(filters: {
       id: item.id,
       question_text: item.question_text,
       company: item.company,
-      question_type: item.question_type as 'Behavioral' | 'Product Design',
-      difficulty: item.difficulty_level as 'Intern' | 'Junior' | 'Mid' | 'Senior',
+      question_type: item.question_type as 'Behavioral' | 'Product Design' | 'Metrics & Goals' | 'Root Cause Analysis',
+      difficulty: item.difficulty_level as 'Intern' | 'Associate' | 'Mid' | 'Senior' | 'Any',
       sample_answer: item.sample_answer,
       skills: item.skills
     }))
@@ -425,7 +425,7 @@ function getMockQuestions(): InterviewQuestion[] {
       question_text: 'How do you prioritize features when you have limited resources?',
       company: 'Meta',
       question_type: 'Product Design',
-      difficulty: 'Mid',
+      difficulty: 'Senior',
       sample_answer: 'I use a framework like RICE (Reach, Impact, Confidence, Effort) to evaluate features...',
       skills: 'prioritization, stakeholder management, strategic thinking',
     },
@@ -434,7 +434,7 @@ function getMockQuestions(): InterviewQuestion[] {
       question_text: 'Tell me about a time you had to influence without authority.',
       company: 'Google',
       question_type: 'Behavioral',
-      difficulty: 'Senior',
+      difficulty: 'Any',
       sample_answer: 'In my previous role, I needed to get buy-in from engineering teams...',
       skills: 'leadership, communication, influence',
     },
@@ -452,7 +452,7 @@ function getMockQuestions(): InterviewQuestion[] {
       question_text: 'Describe a time when you had to make a decision with incomplete data.',
       company: 'Amazon',
       question_type: 'Behavioral',
-      difficulty: 'Junior',
+      difficulty: 'Any',
       sample_answer: 'During a product launch, we had limited user feedback but needed to decide on feature scope...',
       skills: 'decision making, risk assessment, analytical thinking',
     },
@@ -460,7 +460,7 @@ function getMockQuestions(): InterviewQuestion[] {
       id: '5',
       question_text: 'How do you measure the success of a new feature?',
       company: 'Netflix',
-      question_type: 'Product Design',
+      question_type: 'Metrics & Goals',
       difficulty: 'Mid',
       sample_answer: 'I establish both leading and lagging indicators before launch...',
       skills: 'analytics, metrics, experimentation',

@@ -305,7 +305,7 @@ export function categorizeSkills(keywords: string[]): {
  * @param experience - Years of experience or experience keywords
  * @returns Difficulty level
  */
-export function determineDifficulty(roleTitle: string, experience?: string | number): 'Intern' | 'Junior' | 'Mid' | 'Senior' {
+export function determineDifficulty(roleTitle: string, experience?: string | number): 'Intern' | 'Associate' | 'Mid' | 'Senior' {
   const normalizedRole = normalizeRole(roleTitle)
   const roleText = roleTitle.toLowerCase()
   
@@ -313,8 +313,8 @@ export function determineDifficulty(roleTitle: string, experience?: string | num
   if (SENIORITY_KEYWORDS.intern.some(keyword => roleText.includes(keyword))) {
     return 'Intern'
   }
-  if (SENIORITY_KEYWORDS.junior.some(keyword => roleText.includes(keyword))) {
-    return 'Junior'
+  if (SENIORITY_KEYWORDS.associate.some(keyword => roleText.includes(keyword))) {
+    return 'Associate'
   }
   if (SENIORITY_KEYWORDS.senior.some(keyword => roleText.includes(keyword))) {
     return 'Senior'
@@ -333,8 +333,8 @@ export function determineDifficulty(roleTitle: string, experience?: string | num
       if (SENIORITY_KEYWORDS.intern.some(keyword => experienceText.includes(keyword))) {
         return 'Intern'
       }
-      if (SENIORITY_KEYWORDS.junior.some(keyword => experienceText.includes(keyword))) {
-        return 'Junior'
+      if (SENIORITY_KEYWORDS.associate.some(keyword => experienceText.includes(keyword))) {
+        return 'Associate'
       }
       if (SENIORITY_KEYWORDS.senior.some(keyword => experienceText.includes(keyword))) {
         return 'Senior'
@@ -349,7 +349,7 @@ export function determineDifficulty(roleTitle: string, experience?: string | num
     
     // Map years to difficulty
     if (years === 0) return 'Intern'
-    if (years <= 2) return 'Junior'
+    if (years <= 2) return 'Associate'
     if (years <= 5) return 'Mid'
     return 'Senior'
   }
@@ -359,7 +359,7 @@ export function determineDifficulty(roleTitle: string, experience?: string | num
     return 'Intern'
   }
   if (normalizedRole.includes('junior') || normalizedRole.includes('associate')) {
-    return 'Junior'
+    return 'Associate'
   }
   if (normalizedRole.includes('senior') || normalizedRole.includes('lead') || 
       normalizedRole.includes('principal') || normalizedRole.includes('staff')) {

@@ -24,14 +24,13 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
 
   const categories = [
     "All Categories",
-    "Product Strategy",
     "Product Design",
-    "Product Analytics",
-    "Leadership & Communication",
-    "Technical Understanding",
+    "Behavioral",
+    "Metrics & Goals",
+    "Root Cause Analysis",
   ]
 
-  const difficulties = ["All Levels", "Entry Level", "Intermediate", "Advanced"]
+  const difficulties = ["All Levels", "Intern", "Associate", "Mid", "Senior", "Any"]
 
   // Fetch questions when component mounts or user data changes
   useEffect(() => {
@@ -67,29 +66,14 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
 
   // Map question types to categories
   const mapQuestionTypeToCategory = (questionType: string): string => {
-    switch (questionType) {
-      case 'Behavioral':
-        return 'Leadership & Communication'
-      case 'Product Design':
-        return 'Product Design'
-      default:
-        return 'Product Strategy'
-    }
+    // Direct mapping since categories now match database values
+    return questionType
   }
 
   // Map difficulty levels
   const mapDifficulty = (difficulty: string): string => {
-    switch (difficulty) {
-      case 'Intern':
-      case 'Junior':
-        return 'Entry Level'
-      case 'Mid':
-        return 'Intermediate'
-      case 'Senior':
-        return 'Advanced'
-      default:
-        return 'Intermediate'
-    }
+    // Direct mapping since difficulties now match database values
+    return difficulty
   }
   const getFilteredRecommendedQuestions = () => {
     return recommendedQuestions.filter((question) => {
