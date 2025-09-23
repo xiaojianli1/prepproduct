@@ -86,7 +86,7 @@ export async function getQuestionRecommendations(
     try {
       const { data, error } = await supabase
         .from('Questions')
-        .select('uuid, question_text, company, question_type, difficulty_level, sample_answer, skills')
+        .select('id, question_text, company, question_type, difficulty_level, sample_answer, skills')
       
       if (error) {
         console.warn('Supabase query error, using mock data')
@@ -94,7 +94,7 @@ export async function getQuestionRecommendations(
       } else if (data && data.length > 0) {
         // Map database columns to interface properties
         questions = data.map(item => ({
-          id: item.uuid,
+          id: item.id,
           question_text: item.question_text,
           company: item.company,
           question_type: item.question_type as 'Behavioral' | 'Product Design',
@@ -338,7 +338,7 @@ export async function getQuestionsByFilters(filters: {
     
     // Map database columns to interface properties
     return (data || []).map(item => ({
-      id: item.uuid,
+      id: item.id,
       question_text: item.question_text,
       company: item.company,
       question_type: item.question_type as 'Behavioral' | 'Product Design',
