@@ -12,16 +12,16 @@ export async function testSupabaseConnection() {
     const { data, error, count } = await supabase
       .from('questions')
       .select('*', { count: 'exact' })
-      .limit(5)
+      .limit(1)
     
     if (error) {
       console.error('Supabase query error:', error)
-      return { success: false, error: error.message }
+      return { success: false, error: error.message, details: error }
     }
     
     console.log('Connection successful!')
     console.log('Total questions in table:', count)
-    console.log('Sample questions:', data)
+    console.log('Sample question:', data?.[0])
     
     return { 
       success: true, 
@@ -34,7 +34,8 @@ export async function testSupabaseConnection() {
     console.error('Connection test failed:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      details: error
     }
   }
 }
