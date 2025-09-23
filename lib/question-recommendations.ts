@@ -92,10 +92,12 @@ export async function getQuestionRecommendations(
         console.warn('Supabase query error, using mock data')
         questions = getMockQuestions()
       } else if (data && data.length > 0) {
-        // Map difficulty_level to difficulty to match our interface
+        // Map database columns to interface properties
         questions = data.map(item => ({
           ...item,
-          difficulty: item.difficulty_level as 'Intern' | 'Junior' | 'Mid' | 'Senior'
+          difficulty: item.difficulty_level as 'Intern' | 'Junior' | 'Mid' | 'Senior',
+          // Remove difficulty_level from the final object since we've mapped it to difficulty
+          difficulty_level: undefined
         }))
       } else {
         console.warn('No questions found in database, using mock data')
@@ -301,10 +303,10 @@ export async function getQuestionsByFilters(filters: {
   limit?: number
 }): Promise<InterviewQuestion[]> {
   try {
-    let query = supabase.from('interview_questions').select('*')
+    let query = supabase.from('questions').select('*')
     
     if (filters.difficulty && filters.difficulty.length > 0) {
-      query = query.in('difficulty', filters.difficulty)
+      query = query.in('difficulty_level', filters.difficulty)
     }
     
     if (filters.questionType && filters.questionType.length > 0) {
@@ -331,7 +333,12 @@ export async function getQuestionsByFilters(filters: {
       throw new Error(`Failed to fetch filtered questions: ${error.message}`)
     }
     
-    return data || []
+    // Map database columns to interface properties
+    return (data || []).map(item => ({
+      ...item,
+      difficulty: item.difficulty_level as 'Intern' | 'Junior' | 'Mid' | 'Senior',
+      difficulty_level: undefined
+    }))
     
   } catch (error) {
     console.error('Error fetching filtered questions:', error)
