@@ -173,7 +173,7 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
                 variant="ghost"
                 onClick={onBack} // Added onClick handler for back navigation
                 className="w-12 h-12 rounded-xl backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300"
-                    .map((q) => q.id)
+                style={{
                   backgroundColor: "rgba(255, 255, 255, 0.05)",
                   boxShadow: "0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                 }}
@@ -402,7 +402,7 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
 
                 <div className="space-y-4">
                   {filteredRecommendedQuestions.map((question, index) => {
-                    const isSelected = selectedQuestions.includes(parseInt(question.id))
+                    const isSelected = selectedQuestions.includes(question.id)
                     const questionCategory = mapQuestionTypeToCategory(question.question_type)
                     const questionDifficulty = mapDifficulty(question.difficulty)
                     return (
@@ -422,9 +422,9 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
                         }}
                         onClick={() => {
                           setSelectedQuestions((prev) =>
-                            prev.includes(parseInt(question.id))
-                              ? prev.filter((id) => id !== parseInt(question.id)) 
-                              : [...prev, parseInt(question.id)]
+                            prev.includes(question.id)
+                              ? prev.filter((id) => id !== question.id) 
+                              : [...prev, question.id]
                           )
                         }}
                       >
@@ -529,9 +529,9 @@ export default function QuestionSelection({ onStartSession, onBack, userData }: 
                     }}
                     onClick={() => {
                       setSelectedQuestions((prev) =>
-                        prev.includes(question.id) ? prev.filter((id) => id !== question.id) : [...prev, question.id],
-                          ? prev.filter((id) => id !== question.id) 
-                          : [...prev, question.id]
+                        prev.includes(question.id) ? prev.filter((id) => id !== question.id) : [...prev, question.id]
+                      )
+                    }}
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
