@@ -6,28 +6,11 @@ import QuestionSelection from "./question-selection"
 import InterviewCoach from "./interview-coach"
 import FeedbackPage from "./feedback-page"
 import { Component as AILoader } from "./components/ui/ai-loader"
-import type { InterviewQuestion } from "./lib/question-recommendations"
-
-export interface UserData {
-  resumeFile: File | null
-  resumeText: string
-  company: string
-  role: string
-  jobDescription: string
-}
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<"resume" | "selection" | "interview" | "feedback">("resume")
   const [isLoading, setIsLoading] = useState(false)
   const [loadingText, setLoadingText] = useState("")
-  const [userData, setUserData] = useState<UserData>({
-    resumeFile: null,
-    resumeText: "",
-    company: "",
-    role: "",
-    jobDescription: ""
-  })
-  const [selectedQuestions, setSelectedQuestions] = useState<InterviewQuestion[]>([])
 
   const handleTransition = (targetScreen: "resume" | "selection" | "interview" | "feedback", text: string) => {
     setIsLoading(true)
@@ -39,8 +22,7 @@ export default function App() {
     }, 2500)
   }
 
-  const handleResumeComplete = (data: UserData) => {
-    setUserData(data)
+  const handleResumeComplete = () => {
     handleTransition("selection", "Analyzing your profile...")
   }
 
@@ -48,8 +30,7 @@ export default function App() {
     setCurrentScreen("resume")
   }
 
-  const handleStartSession = (questions: InterviewQuestion[]) => {
-    setSelectedQuestions(questions)
+  const handleStartSession = () => {
     handleTransition("interview", "Preparing your session...")
   }
 
@@ -70,23 +51,15 @@ export default function App() {
   }
 
   if (currentScreen === "resume") {
-    return <ResumeUpload onContinue={handleResumeComplete} onBack={() => {}} userData={userData} />
+    return <ResumeUpload onContinue={handleResumeComplete} onBack={() => {}} />
   }
 
   if (currentScreen === "selection") {
-    return <QuestionSelection 
-      onStartSession={handleStartSession} 
-      onBack={handleBackToResume} 
-      userData={userData}
-    />
+    return <QuestionSelection onStartSession={handleStartSession} onBack={handleBackToResume} />
   }
 
   if (currentScreen === "interview") {
-    return <InterviewCoach 
-      onBack={handleBackToSelection} 
-      onEndSession={handleEndSession} 
-      questions={selectedQuestions}
-    />
+    return <InterviewCoach onBack={handleBackToSelection} onEndSession={handleEndSession} />
   }
 
   return <FeedbackPage onBack={handleBackToSelection} onPracticeAgain={handlePracticeAgain} />

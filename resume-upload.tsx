@@ -4,32 +4,22 @@ import type React from "react"
 
 import { useState, useRef } from "react"
 import { ArrowLeft, Upload, Building2, Briefcase } from "lucide-react"
-import type { UserData } from "./app"
 
 interface ResumeUploadProps {
-  onContinue: (data: UserData) => void
+  onContinue: () => void
   onBack: () => void
-  userData: UserData
 }
 
-export default function ResumeUpload({ onContinue, onBack, userData }: ResumeUploadProps) {
-  const [resumeFile, setResumeFile] = useState<File | null>(userData.resumeFile)
-  const [company, setCompany] = useState(userData.company)
-  const [role, setRole] = useState(userData.role)
-  const [jobDescription, setJobDescription] = useState(userData.jobDescription)
+export default function ResumeUpload({ onContinue, onBack }: ResumeUploadProps) {
+  const [resumeFile, setResumeFile] = useState<File | null>(null)
+  const [company, setCompany] = useState("")
+  const [role, setRole] = useState("")
+  const [jobDescription, setJobDescription] = useState("")
   const [dragActive, setDragActive] = useState(false)
-  const [uploadComplete, setUploadComplete] = useState(!!userData.resumeFile)
+  const [uploadComplete, setUploadComplete] = useState(false)
   const [showInterviewDetails, setShowInterviewDetails] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [resumeText, setResumeText] = useState(userData.resumeText)
-  
-  const extractTextFromFile = async (file: File): Promise<string> => {
-    // For now, return a placeholder. In a real implementation, you'd use a library
-    // like pdf-parse for PDFs or mammoth for Word documents
-    return `Extracted text from ${file.name} - placeholder for actual text extraction`
-  }
-  
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -40,7 +30,7 @@ export default function ResumeUpload({ onContinue, onBack, userData }: ResumeUpl
     }
   }
 
-  const handleDrop = async (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
@@ -54,36 +44,26 @@ export default function ResumeUpload({ onContinue, onBack, userData }: ResumeUpl
         file.name.endsWith(".doc") ||
         file.name.endsWith(".docx")
       ) {
-        const extractedText = await extractTextFromFile(file)
         setResumeFile(file)
-        setResumeText(extractedText)
         setUploadComplete(true)
       }
     }
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      const extractedText = await extractTextFromFile(file)
-      setResumeFile(file)
-      setResumeText(extractedText)
+      setResumeFile(e.target.files[0])
       setUploadComplete(true)
     }
   }
 
   const handleContinue = () => {
-    const data: UserData = {
-      resumeFile,
-      resumeText,
-      company,
-      role,
-      jobDescription
-    }
-    onContinue(data)
+    // In a real app, you'd save this data to context or send to backend
+    onContinue()
   }
 
   const handleProceedToDetails = () => {
+    setUploadComplete(false)
     setShowInterviewDetails(true)
   }
 
@@ -319,7 +299,7 @@ export default function ResumeUpload({ onContinue, onBack, userData }: ResumeUpl
           )}
         </div>
 
-        {uploadComplete && !showInterviewDetails && (
+        {uploadComplete && (
           <div className="mt-8 flex justify-center">
             <button
               onClick={handleProceedToDetails}
