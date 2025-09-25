@@ -138,7 +138,6 @@ export default function Component({ questions, onBack, onEndSession }: Interview
       if (interval) {
         clearInterval(interval)
       }
-      stopLiveTranscription()
     }
   }, [isRecording, isPaused])
 
