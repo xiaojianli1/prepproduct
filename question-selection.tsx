@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, Filter, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { fetchAllQuestions } from "@/lib/supabase-queries"
+import { getRecommendedQuestions, type Question, type RecommendedQuestion } from "@/lib/recommendation-engine"
 
 interface QuestionSelectionProps {
   onStartSession?: () => void
@@ -14,6 +16,10 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const [selectedDifficulty, setSelectedDifficulty] = useState("All Levels")
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [jobDescription, setJobDescription] = useState("")
+  const [allQuestions, setAllQuestions] = useState<Question[]>([])
+  const [recommendedQuestions, setRecommendedQuestions] = useState<RecommendedQuestion[]>([])
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false)
 
   const categories = [
     "All Categories",
@@ -25,6 +31,19 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   ]
 
   const difficulties = ["All Levels", "Entry Level", "Intermediate", "Advanced"]
+
+  // Load questions from Supabase on component mount
+  useEffect(() => {
+    const loadQuestions = async () => {
+      const questions = await fetchAllQuestions()
+      setAllQuestions(questions)
+    }
+    loadQuestions()
+  }, [])
+
+  // Generate recommendations when job description changes
+  const handleJobDescriptionChange = (value: string) => {
+    setJobDescription(value)
 
   const sampleQuestions = [
     {
@@ -53,6 +72,28 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
       estimatedTime: "5-7 min",
     },
   ]
+
+    if (value.trim() && allQuestions.length > 0) {
+      setIsLoadingRecommendations(true)
+      // Add small delay to avoid too frequent updates
+      const timeoutId = setTimeout(() => {
+        const recommendations = getRecommendedQuestions(value, allQuestions)
+        setRecommendedQuestions(recommendations)
+        setIsLoadingRecommendations(false)
+      }, 500)
+      
+      return () => clearTimeout(timeoutId)
+    } else {
+      setRecommendedQuestions([])
+      setIsLoadingRecommendations(false)
+    }
+  }
+
+  // Auto-select recommended questions
+  const handleSelectRecommended = () => {
+    const recommendedIds = recommendedQuestions.map(q => parseInt(q.id))
+    setSelectedQuestions(recommendedIds)
+  }
 
   const recommendedQuestions = [
     {
@@ -310,6 +351,47 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
               </div>
             </div>
 
+            {/* Job Description Input */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-white/80 mb-3">
+                Job Description (Optional)
+              </label>
+              <p className="text-xs text-white/60 mb-3">
+                Paste the job description to get personalized question recommendations
+              </p>
+              <textarea
+                value={jobDescription}
+                onChange={(e) => handleJobDescriptionChange(e.target.value)}
+                placeholder="Paste the job description here to get AI-powered question recommendations..."
+                rows={4}
+                className="w-full p-4 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none backdrop-blur-sm text-sm"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  backdropFilter: "blur(10px)",
+                }}
+              />
+              
+              {/* Quick select recommended questions */}
+              {recommendedQuestions.length > 0 && (
+                <div className="mt-3 flex items-center gap-3">
+                  <Button
+                    onClick={handleSelectRecommended}
+                    className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300"
+                    style={{
+                      background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",
+                      boxShadow: "0 4px 12px rgba(0, 122, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+                      color: "white",
+                    }}
+                  >
+                    Select All Recommended ({recommendedQuestions.length})
+                  </Button>
+                  {isLoadingRecommendations && (
+                    <div className="text-xs text-white/60">Analyzing job description...</div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Active Filter Chips */}
             {(selectedCategory !== "All Categories" || selectedDifficulty !== "All Levels" || searchQuery !== "") && (
               <div className="flex flex-wrap gap-2 mb-8">
@@ -346,8 +428,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
               </div>
             )}
 
-            {/* Recommended Questions Section */}
-            {showRecommendedSection && filteredRecommendedQuestions.length > 0 && (
+            {/* AI Recommended Questions Section */}
+            {recommendedQuestions.length > 0 && (
               <div className="mb-12">
                 <div className="flex items-center gap-3 mb-6">
                   <h3 className="text-lg font-semibold text-white tracking-tight">Recommended for You</h3>
@@ -357,15 +439,15 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     </div>
                     <div className="absolute left-6 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                       <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap border border-white/20 shadow-xl">
-                        Questions selected based on your profile and experience
+                        Questions selected based on your job description
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {filteredRecommendedQuestions.map((question, index) => {
-                    const isSelected = selectedQuestions.includes(question.id)
+                  {recommendedQuestions.map((question, index) => {
+                    const isSelected = selectedQuestions.includes(parseInt(question.id))
                     return (
                       <div
                         key={`recommended-${index}`}
@@ -383,9 +465,9 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                         }}
                         onClick={() => {
                           setSelectedQuestions((prev) =>
-                            prev.includes(question.id)
-                              ? prev.filter((id) => id !== question.id)
-                              : [...prev, question.id],
+                            prev.includes(parseInt(question.id))
+                              ? prev.filter((id) => id !== parseInt(question.id))
+                              : [...prev, parseInt(question.id)],
                           )
                         }}
                       >
@@ -411,11 +493,11 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                             <span
                               className="px-3 py-1 rounded-full text-xs font-medium"
                               style={{
-                                backgroundColor: "rgba(0, 122, 255, 0.2)",
-                                color: "#007AFF",
+                                backgroundColor: question.score > 0 ? "rgba(34, 197, 94, 0.2)" : "rgba(156, 163, 175, 0.2)",
+                                color: question.score > 0 ? "#22C55E" : "#9CA3AF",
                               }}
                             >
-                              {question.category}
+                              {question.score > 0 ? "AI Matched" : "Fallback"}
                             </span>
                             <span
                               className="px-3 py-1 rounded-full text-xs font-medium"
@@ -424,10 +506,10 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                                 color: "rgba(255, 255, 255, 0.8)",
                               }}
                             >
-                              {question.difficulty}
+                              {question.difficulty_level}
                             </span>
                           </div>
-                          <span className="text-sm text-white/60 font-medium">{question.estimatedTime}</span>
+                          <span className="text-sm text-white/60 font-medium">3-5 min</span>
                         </div>
 
                         <h3 className="text-lg font-semibold text-white mb-3 leading-relaxed tracking-tight">
@@ -436,32 +518,40 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
                         <p className="text-white/70 leading-relaxed text-sm mb-2">{question.description}</p>
 
-                        <div className="flex items-center gap-2 text-sm" style={{ fontSize: "0.85rem" }}>
-                          <div className="flex items-center gap-1.5 font-medium" style={{ color: "#4A6FA5" }}>
-                            <svg
-                              className="w-3.5 h-3.5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.563.563 0 00-.182-.557l-4.204-3.602c-.38-.325-.178-.948.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-                              />
-                            </svg>
-                            <span>Recommended</span>
+                        {question.matchedKeywords.length > 0 && (
+                          <div className="flex items-center gap-2 text-sm" style={{ fontSize: "0.85rem" }}>
+                            <div className="flex items-center gap-1.5 font-medium" style={{ color: "#22C55E" }}>
+                              <svg
+                                className="w-3.5 h-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              <span>Matched Keywords:</span>
+                            </div>
+                            <span className="text-white/70 italic">{question.matchedKeywords.join(", ")}</span>
                           </div>
-                          <span className="text-white/40">|</span>
-                          <span className="text-white/70 italic">{question.reason}</span>
-                        </div>
+                        )}
                       </div>
                     )
                   })}
                 </div>
               </div>
             )}
+
+            {/* Static Recommended Questions Section */}
+            {showRecommendedSection && filteredRecommendedQuestions.length > 0 && recommendedQuestions.length === 0 && (
+              <div className="mb-12">
+                <div className="flex items-center gap-3 mb-6">
+                  <h3 className="text-lg font-semibold text-white tracking-tight">Suggested Questions</h3>
+                </div>
 
             {/* Regular Question Preview Cards */}
             <div className="space-y-6">
