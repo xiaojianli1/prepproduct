@@ -324,7 +324,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                         </div>
 
                         <h3 className="text-lg font-semibold text-white mb-3 leading-relaxed tracking-tight">
-                          {question.title}
+                          {question.question_text}
                         </h3>
 
 
