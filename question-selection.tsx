@@ -15,6 +15,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedQuestionType, setSelectedQuestionType] = useState("All Types")
+  const [selectedDifficulty, setSelectedDifficulty] = useState("All Levels")
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
   const [recommendedQuestions, setRecommendedQuestions] = useState<RecommendedQuestion[]>([])
   const [selectedCategory, setSelectedCategory] = useState("All Categories")
