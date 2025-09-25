@@ -77,11 +77,12 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
       .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
       .filter((question) => {
         const typeMatch = selectedQuestionType === "All Types" || question.question_type.toLowerCase() === selectedQuestionType.toLowerCase()
+        const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level.toLowerCase() === selectedDifficulty.toLowerCase()
         const searchMatch = 
           searchQuery === "" ||
           question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
           question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
-        return typeMatch && searchMatch
+        return typeMatch && difficultyMatch && searchMatch
       })
       .slice(0, displayedQuestionsCount)
   }
@@ -397,6 +398,19 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                               }}
                             >
                               {question.question_type}
+                            </span>
+                            <span
+                              className="px-3 py-1 rounded-full text-xs font-medium"
+                              style={{
+                                backgroundColor: question.difficulty_level.toLowerCase() === 'beginner' ? "rgba(34, 197, 94, 0.2)" : 
+                                               question.difficulty_level.toLowerCase() === 'intermediate' ? "rgba(251, 191, 36, 0.2)" : 
+                                               "rgba(239, 68, 68, 0.2)",
+                                color: question.difficulty_level.toLowerCase() === 'beginner' ? "#22C55E" : 
+                                       question.difficulty_level.toLowerCase() === 'intermediate' ? "#FBBF24" : 
+                                       "#EF4444",
+                              }}
+                            >
+                              {question.difficulty_level}
                             </span>
                             <span
                               className="px-3 py-1 rounded-full text-xs font-medium"
