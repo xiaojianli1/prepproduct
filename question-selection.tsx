@@ -129,8 +129,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 className="w-12 h-12 rounded-xl backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300"
                 style={{
                   backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  setSelectedQuestions(randomQuestions.map((q) => q.id))
-                  onStartSession?.(randomQuestions)
+                }}
+              >
                 <ArrowLeft className="w-5 h-5 text-white/90" strokeWidth={1.5} />
               </Button>
 
@@ -231,9 +231,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     const randomQuestions = allQuestions
                       .sort(() => 0.5 - Math.random())
                       .slice(0, 3) // Changed from selectedCount to fixed value of 3
-                      .map((q) => q.id)
-                    setSelectedQuestions(randomQuestions)
-                    onStartSession?.()
+                    setSelectedQuestions(randomQuestions.map((q) => q.id))
+                    onStartSession?.(randomQuestions)
                   }}
                   className="w-full py-3 px-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-xs leading-tight"
                   style={{
