@@ -60,9 +60,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
       const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level === selectedDifficulty
       const searchMatch =
         searchQuery === "" ||
-        question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        question.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        question.category.toLowerCase().includes(searchQuery.toLowerCase())
+        question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
       return categoryMatch && difficultyMatch && searchMatch
     })
   }
@@ -523,11 +521,9 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     </div>
 
                     <h3 className="text-lg font-semibold text-white mb-3 leading-relaxed tracking-tight">
-                      {question.title}
+                      {question.question_text}
                     </h3>
 
-                    <p className="text-white/70 leading-relaxed text-sm">{question.description}</p>
-                  </div>
                 )
               })}
             </div>

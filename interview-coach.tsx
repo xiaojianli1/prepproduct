@@ -8,36 +8,26 @@ import { Button } from "@/components/ui/button"
 const questions = [
   {
     id: 1,
-    title:
-      "Tell me about a time when you had to prioritize features for a product with limited resources. How did you approach the decision-making process?",
-    description:
-      "Consider discussing your framework for prioritization, stakeholder management, and the outcome of your decisions.",
+    question_text:
+      "Tell me about a time when you had to prioritize features for a product with limited resources. How did you approach the decision-making process? Consider discussing your framework for prioritization, stakeholder management, and the outcome of your decisions.",
   },
   {
     id: 2,
-    title:
-      "Describe a situation where you had to launch a product feature that didn't perform as expected. How did you handle it?",
-    description:
-      "Focus on your analysis process, stakeholder communication, and the steps you took to iterate and improve.",
+    question_text:
+      "Describe a situation where you had to launch a product feature that didn't perform as expected. How did you handle it? Focus on your analysis process, stakeholder communication, and the steps you took to iterate and improve.",
   },
   {
     id: 3,
-    title: "How would you approach gathering and incorporating user feedback for a new product feature?",
-    description:
-      "Discuss your methods for user research, feedback collection, and how you balance different user needs and business objectives.",
+    question_text: "How would you approach gathering and incorporating user feedback for a new product feature? Discuss your methods for user research, feedback collection, and how you balance different user needs and business objectives.",
   },
   {
     id: 4,
-    title:
-      "Tell me about a time when you had to work with engineering and design teams to solve a complex product problem.",
-    description:
-      "Highlight your collaboration skills, communication strategies, and how you facilitated cross-functional alignment.",
+    question_text:
+      "Tell me about a time when you had to work with engineering and design teams to solve a complex product problem. Highlight your collaboration skills, communication strategies, and how you facilitated cross-functional alignment.",
   },
   {
     id: 5,
-    title: "Describe your approach to defining and measuring success metrics for a product feature.",
-    description:
-      "Explain your framework for setting KPIs, tracking performance, and making data-driven product decisions.",
+    question_text: "Describe your approach to defining and measuring success metrics for a product feature. Explain your framework for setting KPIs, tracking performance, and making data-driven product decisions.",
   },
 ]
 
@@ -236,12 +226,9 @@ export default function Component({ onBack, onEndSession }: InterviewCoachProps)
               </div>
             </div>
             <div className="flex-1 space-y-3">
-              <h1 className="text-xl font-semibold text-white leading-relaxed tracking-tight">
-                {currentQuestion.title}
+              <h1 className="text-lg font-semibold text-white leading-relaxed tracking-tight">
+                {currentQuestion.question_text}
               </h1>
-              <p className="text-sm text-white/70 leading-relaxed tracking-wide font-normal">
-                {currentQuestion.description}
-              </p>
             </div>
           </div>
         </div>

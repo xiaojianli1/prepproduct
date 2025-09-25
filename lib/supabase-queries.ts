@@ -8,7 +8,7 @@ export async function fetchAllQuestions(): Promise<Question[]> {
   try {
     const { data, error } = await supabase
       .from('Questions')
-      .select('id, title, description, category, difficulty_level, keywords');
+      .select('id, question_text, category, difficulty_level, keywords');
 
     if (error) {
       console.error('Error fetching questions:', error);
@@ -29,7 +29,7 @@ export async function fetchQuestionsByIds(ids: string[]): Promise<Question[]> {
   try {
     const { data, error } = await supabase
       .from('Questions')
-      .select('id, title, description, category, difficulty_level, keywords')
+      .select('id, question_text, category, difficulty_level, keywords')
       .in('id', ids);
 
     if (error) {

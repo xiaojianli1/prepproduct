@@ -1,8 +1,7 @@
 // Simple keyword-based recommendation engine
 export interface Question {
   id: string;
-  title: string;
-  description: string;
+  question_text: string;
   category: string;
   difficulty_level: string;
   keywords: string;

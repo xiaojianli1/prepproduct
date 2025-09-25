@@ -19,7 +19,7 @@ const feedbackData = [
   {
     id: 1,
     type: "Background question",
-    question: "Tell me about a time when you had to prioritize features for a product with limited resources.",
+    question_text: "Tell me about a time when you had to prioritize features for a product with limited resources.",
     answer:
       "In my previous role at TechCorp, we were launching a new mobile app with a tight deadline and limited engineering resources. I had to prioritize between user authentication, core functionality, and advanced features. I used the RICE framework to evaluate each feature based on reach, impact, confidence, and effort. I prioritized user authentication and core functionality first, then planned advanced features for the next sprint. This approach helped us launch on time while ensuring the most critical user needs were met.",
     insights: {
@@ -55,7 +55,7 @@ const feedbackData = [
   {
     id: 2,
     type: "Situational question",
-    question: "Describe a situation where you had to launch a product feature that didn't perform as expected.",
+    question_text: "Describe a situation where you had to launch a product feature that didn't perform as expected.",
     answer:
       "We launched a recommendation engine feature that had low user engagement. I analyzed user behavior data and found that users weren't discovering the feature. I worked with the design team to improve the UI placement and with engineering to add onboarding tooltips. We also A/B tested different approaches. After these changes, engagement increased by 40% over the next month.",
     insights: {
@@ -91,7 +91,7 @@ const feedbackData = [
   {
     id: 3,
     type: "Process question",
-    question: "How would you approach gathering and incorporating user feedback for a new product feature?",
+    question_text: "How would you approach gathering and incorporating user feedback for a new product feature?",
     answer:
       "I would start with user interviews to understand pain points, then create prototypes for usability testing. I'd use surveys for quantitative data and set up analytics to track user behavior. For incorporation, I'd categorize feedback by impact and feasibility, then work with engineering to prioritize implementation. I'd also establish a feedback loop to measure the success of changes.",
     insights: {
@@ -350,7 +350,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
 
                   {/* Question Text */}
                   <div className="space-y-4">
-                    <h3 className="text-xl font-medium text-white leading-relaxed">{item.question}</h3>
+                    <h3 className="text-xl font-medium text-white leading-relaxed">{item.question_text}</h3>
                   </div>
 
                   <div className="space-y-6">
