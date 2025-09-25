@@ -7,7 +7,7 @@ import { fetchAllQuestions } from "@/lib/supabase-queries"
 import { getRecommendedQuestions, type Question, type RecommendedQuestion } from "@/lib/recommendation-engine"
 
 interface QuestionSelectionProps {
-  onStartSession?: () => void
+  onStartSession?: (questions: any[]) => void
   onBack?: () => void // Added onBack prop for navigation
 }
 
@@ -129,9 +129,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 className="w-12 h-12 rounded-xl backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300"
                 style={{
                   backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                }}
-              >
+                  setSelectedQuestions(randomQuestions.map((q) => q.id))
+                  onStartSession?.(randomQuestions)
                 <ArrowLeft className="w-5 h-5 text-white/90" strokeWidth={1.5} />
               </Button>
 
@@ -594,7 +593,13 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
               </span>
             </div>
             <Button
-              onClick={onStartSession}
+              onClick={() => {
+                const questionsToPass = [
+                  ...recommendedQuestions.filter(q => selectedQuestions.includes(q.id)),
+                  ...allQuestions.filter(q => selectedQuestions.includes(q.id) && !recommendedQuestions.some(rq => rq.id === q.id))
+                ]
+                onStartSession?.(questionsToPass)
+              }}
               className="py-2 px-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-xs leading-tight"
               style={{
                 background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",

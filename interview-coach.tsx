@@ -4,39 +4,13 @@ import { useState, useEffect, useRef } from "react"
 import { Mic, Square, Play, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-// Sample PM interview questions
-const questions = [
-  {
-    id: 1,
-    question_text:
-      "Tell me about a time when you had to prioritize features for a product with limited resources. How did you approach the decision-making process? Consider discussing your framework for prioritization, stakeholder management, and the outcome of your decisions.",
-  },
-  {
-    id: 2,
-    question_text:
-      "Describe a situation where you had to launch a product feature that didn't perform as expected. How did you handle it? Focus on your analysis process, stakeholder communication, and the steps you took to iterate and improve.",
-  },
-  {
-    id: 3,
-    question_text: "How would you approach gathering and incorporating user feedback for a new product feature? Discuss your methods for user research, feedback collection, and how you balance different user needs and business objectives.",
-  },
-  {
-    id: 4,
-    question_text:
-      "Tell me about a time when you had to work with engineering and design teams to solve a complex product problem. Highlight your collaboration skills, communication strategies, and how you facilitated cross-functional alignment.",
-  },
-  {
-    id: 5,
-    question_text: "Describe your approach to defining and measuring success metrics for a product feature. Explain your framework for setting KPIs, tracking performance, and making data-driven product decisions.",
-  },
-]
-
 interface InterviewCoachProps {
+  questions: any[]
   onBack?: () => void
   onEndSession?: () => void
 }
 
-export default function Component({ onBack, onEndSession }: InterviewCoachProps) {
+export default function Component({ questions, onBack, onEndSession }: InterviewCoachProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [timeElapsed, setTimeElapsed] = useState(0)
@@ -47,9 +21,17 @@ export default function Component({ onBack, onEndSession }: InterviewCoachProps)
   // Use ref to store frozen waveform to avoid dependency issues
   const frozenWaveformRef = useRef(Array(20).fill(0))
 
-  const maxTime = 180 // 3 minutes in seconds
-  const totalQuestions = questions.length
+  // Dynamic max time based on question type
+  const getMaxTimeForQuestion = (question: any) => {
+    if (question.question_type?.toLowerCase() === 'behavioral') {
+      return 180 // 3 minutes for behavioral questions
+    }
+    return 600 // 10 minutes for technical questions (product design, metrics, etc.)
+  }
+
+  const totalQuestions = questions?.length || 0
   const currentQuestion = questions[currentQuestionIndex]
+  const maxTime = currentQuestion ? getMaxTimeForQuestion(currentQuestion) : 180
 
   // Handle record button click - now toggles pause/resume when recording
   const handleRecord = () => {
@@ -72,6 +54,7 @@ export default function Component({ onBack, onEndSession }: InterviewCoachProps)
     if (currentQuestionIndex >= totalQuestions - 1) {
       // Last question - could show completion screen
       console.log("All questions completed!")
+      onEndSession?.()
       return
     }
 
@@ -164,6 +147,20 @@ export default function Component({ onBack, onEndSession }: InterviewCoachProps)
 
   const progress = (timeElapsed / maxTime) * 100
 
+  // Early return if no questions provided
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-white mb-4">No questions selected</h2>
+          <Button onClick={onBack} className="px-6 py-3 rounded-xl">
+            Go Back
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className="h-screen flex flex-col p-6 relative overflow-hidden"
@@ -219,13 +216,47 @@ export default function Component({ onBack, onEndSession }: InterviewCoachProps)
                   boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
                 }}
               >
-                Q{currentQuestion.id}
+                Q{currentQuestionIndex + 1}
               </div>
               <div className="text-xs text-white/60 font-medium tracking-wide">
-                {currentQuestion.id} of {totalQuestions}
+                {currentQuestionIndex + 1} of {totalQuestions}
               </div>
             </div>
             <div className="flex-1 space-y-3">
+              {/* Question Type and Difficulty Tags */}
+              <div className="flex items-center gap-2 mb-3">
+                <span
+                  className="px-3 py-1 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: "rgba(0, 122, 255, 0.2)",
+                    color: "#007AFF",
+                  }}
+                >
+                  {currentQuestion.question_type}
+                </span>
+                <span
+                  className="px-3 py-1 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: currentQuestion.difficulty_level?.toLowerCase() === 'beginner' ? "rgba(34, 197, 94, 0.2)" : 
+                                   currentQuestion.difficulty_level?.toLowerCase() === 'intermediate' ? "rgba(251, 191, 36, 0.2)" : 
+                                   "rgba(239, 68, 68, 0.2)",
+                    color: currentQuestion.difficulty_level?.toLowerCase() === 'beginner' ? "#22C55E" : 
+                           currentQuestion.difficulty_level?.toLowerCase() === 'intermediate' ? "#FBBF24" : 
+                           "#EF4444",
+                  }}
+                >
+                  {currentQuestion.difficulty_level}
+                </span>
+                <span
+                  className="px-3 py-1 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: "rgba(156, 163, 175, 0.2)",
+                    color: "#9CA3AF",
+                  }}
+                >
+                  {currentQuestion.company}
+                </span>
+              </div>
               <h1 className="text-lg font-semibold text-white leading-relaxed tracking-tight">
                 {currentQuestion.question_text}
               </h1>
@@ -387,7 +418,7 @@ export default function Component({ onBack, onEndSession }: InterviewCoachProps)
               color: "white",
             }}
           >
-            {currentQuestionIndex >= totalQuestions - 1 ? "Complete Session" : "Next Question"}
+            {currentQuestionIndex >= totalQuestions - 1 ? "Complete Session" : `Next Question (${currentQuestionIndex + 2}/${totalQuestions})`}
           </Button>
 
           <div className="w-px h-8 bg-white/15"></div>
