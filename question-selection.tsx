@@ -29,6 +29,13 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
     "Root Cause Analysis"
   ]
 
+  const difficultyLevels = [
+    "All Levels",
+    "Beginner", 
+    "Intermediate",
+    "Advanced"
+  ]
+
   // Load questions from Supabase on component mount
   useEffect(() => {
     const loadQuestions = async () => {
