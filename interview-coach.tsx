@@ -19,6 +19,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const [questionVisible, setQuestionVisible] = useState(true)
   const [liveTranscription, setLiveTranscription] = useState("")
   const [isTranscribing, setIsTranscribing] = useState(false)
+  const [finalTranscribing, setFinalTranscribing] = useState(false)
 
   // Use ref to store frozen waveform to avoid dependency issues
   const frozenWaveformRef = useRef(Array(20).fill(0))
@@ -399,6 +400,34 @@ export default function Component({ questions, onBack, onEndSession }: Interview
 
       {/* Bottom Controls */}
       <div className="w-full max-w-md mx-auto mb-6 z-20">
+        {/* Live Transcription Display */}
+        {(isRecording && liveTranscription) && (
+          <div className="mb-4">
+            <div
+              className="p-4 rounded-xl backdrop-blur-3xl border border-white/15 shadow-xl min-h-[60px]"
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.03)",
+                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-xs text-white/60 font-medium">Live Transcription</span>
+                {isTranscribing && (
+                  <div className="flex items-center gap-1">
+                    <div className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-white/80 leading-relaxed">
+                {liveTranscription || "Start speaking to see live transcription..."}
+              </p>
+            </div>
+          </div>
+        )}
+        
         <div
           className="flex items-center gap-6 px-6 py-4 rounded-2xl backdrop-blur-3xl border border-white/15 shadow-xl"
           style={{
@@ -409,18 +438,22 @@ export default function Component({ questions, onBack, onEndSession }: Interview
           {/* Primary Next Question Button */}
           <Button
             onClick={handleNextQuestion}
-            disabled={currentQuestionIndex >= totalQuestions - 1}
+            disabled={currentQuestionIndex >= totalQuestions - 1 || finalTranscribing}
             className="flex-1 py-3 px-6 rounded-xl font-medium tracking-wide transition-all duration-300 text-sm"
             style={{
               background:
-                currentQuestionIndex >= totalQuestions - 1
+                currentQuestionIndex >= totalQuestions - 1 || finalTranscribing
                   ? "linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(29, 78, 216, 0.3) 100%)"
                   : "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
               boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
               color: "white",
             }}
           >
-            {currentQuestionIndex >= totalQuestions - 1 ? "Complete Session" : `Next Question (${currentQuestionIndex + 2}/${totalQuestions})`}
+            {finalTranscribing 
+              ? "Processing..." 
+              : currentQuestionIndex >= totalQuestions - 1 
+                ? "Complete Session" 
+                : "Next Question"}
           </Button>
 
           <div className="w-px h-8 bg-white/15"></div>
@@ -428,7 +461,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
           {/* Secondary End Session Button */}
           <Button
             onClick={handleEndSession}
-            variant="ghost"
+            disabled={finalTranscribing}
             className="text-white/70 hover:text-white font-medium tracking-wide transition-all duration-300 px-6 py-3 rounded-xl hover:bg-white/5 text-sm"
           >
             End Session
