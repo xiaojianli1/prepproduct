@@ -14,9 +14,18 @@ interface QuestionSelectionProps {
 export default function QuestionSelection({ onStartSession, onBack }: QuestionSelectionProps) {
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedQuestionType, setSelectedQuestionType] = useState("All Types")
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
   const [recommendedQuestions, setRecommendedQuestions] = useState<RecommendedQuestion[]>([])
   const [selectedCategory, setSelectedCategory] = useState("All Categories")
+
+  const questionTypes = [
+    "All Types",
+    "product design",
+    "metrics & goal-setting", 
+    "behavioral",
+    "Root Cause Analysis"
+  ]
 
   // Load questions from Supabase on component mount
   useEffect(() => {
@@ -44,12 +53,13 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
   const getFilteredRecommendedQuestions = () => {
     return recommendedQuestions.filter((question) => {
+      const typeMatch = selectedQuestionType === "All Types" || question.question_type === selectedQuestionType
       const searchMatch = 
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
         question.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
-      return searchMatch
+      return typeMatch && searchMatch
     })
   }
 
@@ -138,6 +148,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 <button
                   onClick={() => {
                     setSearchQuery("")
+                    setSelectedQuestionType("All Types")
                   }}
                   className="text-xs text-white/60 hover:text-white/80 transition-colors"
                 >
@@ -210,12 +221,20 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
             </div>
 
             {/* Active Filter Chips */}
-            {searchQuery !== "" && (
+            {(searchQuery !== "" || selectedQuestionType !== "All Types") && (
               <div className="flex flex-wrap gap-2 mb-8">
                 {searchQuery !== "" && (
                   <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border border-white/20 bg-white/5">
                     <span className="text-white/80">"{searchQuery}"</span>
                     <button onClick={() => setSearchQuery("")} className="text-white/60 hover:text-white/80">
+                      ×
+                    </button>
+                  </div>
+                )}
+                {selectedQuestionType !== "All Types" && (
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border border-white/20 bg-white/5">
+                    <span className="text-white/80">{selectedQuestionType}</span>
+                    <button onClick={() => setSelectedQuestionType("All Types")} className="text-white/60 hover:text-white/80">
                       ×
                     </button>
                   </div>
@@ -304,20 +323,20 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                             <span
                               className="px-3 py-1 rounded-full text-xs font-medium"
                               style={{
+                                backgroundColor: "rgba(0, 122, 255, 0.2)",
+                                color: "#007AFF",
+                              }}
+                            >
+                              {question.question_type}
+                            </span>
+                            <span
+                              className="px-3 py-1 rounded-full text-xs font-medium"
+                              style={{
                                 backgroundColor: "rgba(156, 163, 175, 0.2)",
                                 color: "#9CA3AF",
                               }}
                             >
                               {question.company}
-                            </span>
-                            <span
-                              className="px-3 py-1 rounded-full text-xs font-medium"
-                              style={{
-                                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                color: "rgba(255, 255, 255, 0.8)",
-                              }}
-                            >
-                              {question.difficulty_level}
                             </span>
                           </div>
                           <span className="text-sm text-white/60 font-medium">3-5 min</span>
@@ -354,7 +373,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                   })}
                 </div>
               </div>
-            )}
+                            {question.question_type}
 
             {/* Static Recommended Questions Section */}
             {showRecommendedSection && filteredRecommendedQuestions.length > 0 && recommendedQuestions.length === 0 && (
@@ -401,11 +420,11 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                           {isSelected && (
                             <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              backgroundColor: "rgba(156, 163, 175, 0.2)",
+                              color: "#9CA3AF",
                                 clipRule="evenodd"
                               />
-                            </svg>
+                            {question.company}
                           )}
                         </div>
 

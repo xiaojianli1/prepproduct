@@ -2,6 +2,7 @@
 export interface Question {
   id: string;
   question_text: string;
+  question_type: string;
   company: string;
   difficulty_level: string;
   keywords: string;
