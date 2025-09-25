@@ -7,7 +7,7 @@ import type { Question } from './recommendation-engine';
 export async function fetchAllQuestions(): Promise<Question[]> {
   try {
     const { data, error } = await supabase
-      .from('questions')
+      .from('Questions')
       .select('id, title, description, category, difficulty_level, keywords');
 
     if (error) {
@@ -28,7 +28,7 @@ export async function fetchAllQuestions(): Promise<Question[]> {
 export async function fetchQuestionsByIds(ids: string[]): Promise<Question[]> {
   try {
     const { data, error } = await supabase
-      .from('questions')
+      .from('Questions')
       .select('id, title, description, category, difficulty_level, keywords')
       .in('id', ids);
 
