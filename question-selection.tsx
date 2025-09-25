@@ -61,6 +61,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
       const searchMatch =
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        question.category.toLowerCase().includes(searchQuery.toLowerCase())
       return categoryMatch && difficultyMatch && searchMatch
     })
   }
@@ -524,6 +525,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                       {question.question_text}
                     </h3>
 
+                    <p className="text-white/70 leading-relaxed text-sm mb-2">{question.description}</p>
+                  </div>
                 )
               })}
             </div>
