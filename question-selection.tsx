@@ -45,34 +45,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const handleJobDescriptionChange = (value: string) => {
     setJobDescription(value)
 
-  const sampleQuestions = [
-    {
-      id: 1,
-      category: "Product Strategy",
-      difficulty: "Intermediate",
-      title: "Tell me about a time when you had to prioritize features for a product with limited resources.",
-      description:
-        "This question tests your ability to make strategic decisions under constraints and communicate your prioritization framework.",
-      estimatedTime: "3-5 min",
-    },
-    {
-      id: 2,
-      category: "Product Design",
-      difficulty: "Entry Level",
-      title: "How would you improve the user experience of our mobile app?",
-      description: "Demonstrates your user-centric thinking and ability to identify improvement opportunities.",
-      estimatedTime: "4-6 min",
-    },
-    {
-      id: 3,
-      category: "Product Analytics",
-      difficulty: "Advanced",
-      title: "A key metric for our product dropped 15% last week. How would you investigate?",
-      description: "Tests your analytical thinking and systematic approach to problem-solving with data.",
-      estimatedTime: "5-7 min",
-    },
-  ]
-
     if (value.trim() && allQuestions.length > 0) {
       setIsLoadingRecommendations(true)
       // Add small delay to avoid too frequent updates
@@ -95,43 +67,10 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
     setSelectedQuestions(recommendedIds)
   }
 
-  const recommendedQuestions = [
-    {
-      id: 1,
-      category: "Product Strategy",
-      difficulty: "Intermediate",
-      title: "Tell me about a time when you had to prioritize features for a product with limited resources.",
-      description:
-        "This question tests your ability to make strategic decisions under constraints and communicate your prioritization framework.",
-      estimatedTime: "3-5 min",
-      reason: "Matches your product management experience",
-    },
-    {
-      id: 4,
-      category: "Leadership & Communication",
-      difficulty: "Intermediate",
-      title:
-        "Tell me about a time when you had to work with engineering and design teams to solve a complex product problem.",
-      description:
-        "Highlight your collaboration skills, communication strategies, and how you facilitated cross-functional alignment.",
-      estimatedTime: "4-6 min",
-      reason: "Based on your cross-functional leadership background",
-    },
-    {
-      id: 6,
-      category: "Product Analytics",
-      difficulty: "Entry Level",
-      title: "How would you measure the success of a new feature launch?",
-      description: "Tests your understanding of metrics, KPIs, and data-driven decision making in product management.",
-      estimatedTime: "3-4 min",
-      reason: "Aligned with your analytical skills",
-    },
-  ]
-
   const getFilteredRecommendedQuestions = () => {
     return recommendedQuestions.filter((question) => {
       const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
-      const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty === selectedDifficulty
+      const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level === selectedDifficulty
       const searchMatch =
         searchQuery === "" ||
         question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -142,11 +81,11 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   }
 
   const getFilteredQuestions = () => {
-    return sampleQuestions
+    return allQuestions
       .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
       .filter((question) => {
         const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
-        const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty === selectedDifficulty
+        const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level === selectedDifficulty
         const searchMatch =
           searchQuery === "" ||
           question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -293,7 +232,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 <Button
                   onClick={() => {
                     // Quick start with random selection
-                    const randomQuestions = sampleQuestions
+                    const randomQuestions = allQuestions
                       .sort(() => 0.5 - Math.random())
                       .slice(0, 3) // Changed from selectedCount to fixed value of 3
                       .map((q) => q.id)
@@ -552,6 +491,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 <div className="flex items-center gap-3 mb-6">
                   <h3 className="text-lg font-semibold text-white tracking-tight">Suggested Questions</h3>
                 </div>
+              </div>
+            )}
 
             {/* Regular Question Preview Cards */}
             <div className="space-y-6">
@@ -613,10 +554,10 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                             color: "rgba(255, 255, 255, 0.8)",
                           }}
                         >
-                          {question.difficulty}
+                          {question.difficulty_level}
                         </span>
                       </div>
-                      <span className="text-sm text-white/60 font-medium">{question.estimatedTime}</span>
+                      <span className="text-sm text-white/60 font-medium">3-5 min</span>
                     </div>
 
                     <h3 className="text-lg font-semibold text-white mb-3 leading-relaxed tracking-tight">
