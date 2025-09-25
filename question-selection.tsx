@@ -12,14 +12,11 @@ interface QuestionSelectionProps {
 }
 
 export default function QuestionSelection({ onStartSession, onBack }: QuestionSelectionProps) {
-  const [selectedCategory, setSelectedCategory] = useState("All Categories")
-  const [selectedDifficulty, setSelectedDifficulty] = useState("All Levels")
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
   const [recommendedQuestions, setRecommendedQuestions] = useState<RecommendedQuestion[]>([])
 
-  const difficulties = ["All Levels", "Entry Level", "Intermediate", "Advanced"]
 
   // Load questions from Supabase on component mount
   useEffect(() => {
@@ -49,12 +46,11 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
     return recommendedQuestions.filter((question) => {
       const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level === selectedDifficulty
       const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
-      const searchMatch =
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
         question.category.toLowerCase().includes(searchQuery.toLowerCase())
         question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
-      return difficultyMatch && searchMatch
+      return searchMatch
     })
   }
 
@@ -68,7 +64,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
           question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           question.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
           question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
-        return difficultyMatch && searchMatch
+        return searchMatch
       })
   }
 
@@ -142,7 +138,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 <h3 className="text-lg font-semibold text-white tracking-tight">Filters</h3>
                 <button
                   onClick={() => {
-                    setSelectedDifficulty("All Levels")
                     setSearchQuery("")
                   }}
                   className="text-xs text-white/60 hover:text-white/80 transition-colors"
@@ -151,35 +146,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 </button>
               </div>
 
-              <div className="space-y-6">
-
-                {/* Difficulty Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-white/80 mb-3">Difficulty</label>
-                  <div className="relative">
-                    <select
-                      value={selectedDifficulty}
-                      onChange={(e) => setSelectedDifficulty(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/20 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
-                      style={{
-                        backgroundColor: "rgba(255, 255, 255, 0.05)",
-                        backdropFilter: "blur(10px)",
-                      }}
-                    >
-                      {difficulties.map((difficulty) => (
-                        <option
-                          key={difficulty}
-                          value={difficulty}
-                          style={{ backgroundColor: "#2a2a2a", color: "white" }}
-                        >
-                          {difficulty}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
 
               {/* Start Practice Buttons */}
               <div className="mt-8 pt-6 border-t border-white/15 space-y-3">
@@ -245,19 +211,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
             </div>
 
             {/* Active Filter Chips */}
-            {(selectedDifficulty !== "All Levels" || searchQuery !== "") && (
+            {searchQuery !== "" && (
               <div className="flex flex-wrap gap-2 mb-8">
-                {selectedDifficulty !== "All Levels" && (
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border border-white/20 bg-white/5">
-                    <span className="text-white/80">{selectedDifficulty}</span>
-                    <button
-                      onClick={() => setSelectedDifficulty("All Levels")}
-                      className="text-white/60 hover:text-white/80"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
                 {searchQuery !== "" && (
                   <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border border-white/20 bg-white/5">
                     <span className="text-white/80">"{searchQuery}"</span>
