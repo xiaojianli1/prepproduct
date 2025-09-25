@@ -54,11 +54,10 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
   const getFilteredRecommendedQuestions = () => {
     return recommendedQuestions.filter((question) => {
-      const typeMatch = selectedQuestionType === "All Types" || question.question_type === selectedQuestionType
+      const typeMatch = selectedQuestionType === "All Types" || question.question_type.toLowerCase() === selectedQuestionType.toLowerCase()
       const searchMatch = 
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        question.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
       return typeMatch && searchMatch
     })
@@ -68,7 +67,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
     return allQuestions
       .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
       .filter((question) => {
-        const typeMatch = selectedQuestionType === "All Types" || question.question_type === selectedQuestionType
+        const typeMatch = selectedQuestionType === "All Types" || question.question_type.toLowerCase() === selectedQuestionType.toLowerCase()
         const searchMatch = 
           searchQuery === "" ||
           question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -86,7 +85,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const totalAvailableQuestions = allQuestions
     .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
     .filter((question) => {
-      const typeMatch = selectedQuestionType === "All Types" || question.question_type === selectedQuestionType
+      const typeMatch = selectedQuestionType === "All Types" || question.question_type.toLowerCase() === selectedQuestionType.toLowerCase()
       const searchMatch = 
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
