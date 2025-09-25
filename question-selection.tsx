@@ -14,7 +14,6 @@ interface QuestionSelectionProps {
 export default function QuestionSelection({ onStartSession, onBack }: QuestionSelectionProps) {
   const [selectedCategory, setSelectedCategory] = useState("All Categories")
   const [selectedDifficulty, setSelectedDifficulty] = useState("All Levels")
-  const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
