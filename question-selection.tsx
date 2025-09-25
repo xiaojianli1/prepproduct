@@ -41,7 +41,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
   // Auto-select recommended questions
   const handleSelectRecommended = () => {
-    const recommendedIds = recommendedQuestions.map(q => parseInt(q.id))
+    const recommendedIds = recommendedQuestions.map(q => q.id)
     setSelectedQuestions(recommendedIds)
   }
 
