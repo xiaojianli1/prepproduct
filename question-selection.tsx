@@ -55,11 +55,12 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const getFilteredRecommendedQuestions = () => {
     return recommendedQuestions.filter((question) => {
       const typeMatch = selectedQuestionType === "All Types" || question.question_type.toLowerCase() === selectedQuestionType.toLowerCase()
+      const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level.toLowerCase() === selectedDifficulty.toLowerCase()
       const searchMatch = 
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
         question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
-      return typeMatch && searchMatch
+      return typeMatch && difficultyMatch && searchMatch
     })
   }
 
@@ -86,11 +87,12 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
     .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
     .filter((question) => {
       const typeMatch = selectedQuestionType === "All Types" || question.question_type.toLowerCase() === selectedQuestionType.toLowerCase()
+      const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level.toLowerCase() === selectedDifficulty.toLowerCase()
       const searchMatch = 
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
         question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
-      return typeMatch && searchMatch
+      return typeMatch && difficultyMatch && searchMatch
     }).length
   
   const hasMoreQuestions = displayedQuestionsCount < totalAvailableQuestions
@@ -167,6 +169,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                   onClick={() => {
                     setSearchQuery("")
                     setSelectedQuestionType("All Types")
+                    setSelectedDifficulty("All Levels")
                   }}
                   className="text-xs text-white/60 hover:text-white/80 transition-colors"
                 >
@@ -186,6 +189,25 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     {questionTypes.map((type) => (
                       <option key={type} value={type} className="bg-gray-800 text-white">
                         {type}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Difficulty Level Filter */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-white/80 mb-3">Difficulty Level</label>
+                <div className="relative">
+                  <select
+                    value={selectedDifficulty}
+                    onChange={(e) => setSelectedDifficulty(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-white/15 text-white bg-white/5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer"
+                  >
+                    {difficultyLevels.map((level) => (
+                      <option key={level} value={level} className="bg-gray-800 text-white">
+                        {level}
                       </option>
                     ))}
                   </select>
@@ -257,7 +279,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
             </div>
 
             {/* Active Filter Chips */}
-            {(searchQuery !== "" || selectedQuestionType !== "All Types") && (
+            {(searchQuery !== "" || selectedQuestionType !== "All Types" || selectedDifficulty !== "All Levels") && (
               <div className="flex flex-wrap gap-2 mb-8">
                 {searchQuery !== "" && (
                   <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border border-white/20 bg-white/5">
@@ -271,6 +293,14 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                   <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border border-white/20 bg-white/5">
                     <span className="text-white/80">{selectedQuestionType}</span>
                     <button onClick={() => setSelectedQuestionType("All Types")} className="text-white/60 hover:text-white/80">
+                      ×
+                    </button>
+                  </div>
+                )}
+                {selectedDifficulty !== "All Levels" && (
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border border-white/20 bg-white/5">
+                    <span className="text-white/80">{selectedDifficulty}</span>
+                    <button onClick={() => setSelectedDifficulty("All Levels")} className="text-white/60 hover:text-white/80">
                       ×
                     </button>
                   </div>
@@ -461,12 +491,25 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                         <span
                           className="px-3 py-1 rounded-full text-xs font-medium"
                           style={{
-                            backgroundColor: "rgba(156, 163, 175, 0.2)",
-                            color: "#9CA3AF",
+                           backgroundColor: question.difficulty_level.toLowerCase() === 'beginner' ? "rgba(34, 197, 94, 0.2)" : 
+                                           question.difficulty_level.toLowerCase() === 'intermediate' ? "rgba(251, 191, 36, 0.2)" : 
+                                           "rgba(239, 68, 68, 0.2)",
+                           color: question.difficulty_level.toLowerCase() === 'beginner' ? "#22C55E" : 
+                                  question.difficulty_level.toLowerCase() === 'intermediate' ? "#FBBF24" : 
+                                  "#EF4444",
                           }}
                         >
-                          {question.company}
+                         {question.difficulty_level}
                         </span>
+                       <span
+                         className="px-3 py-1 rounded-full text-xs font-medium"
+                         style={{
+                           backgroundColor: "rgba(156, 163, 175, 0.2)",
+                           color: "#9CA3AF",
+                         }}
+                       >
+                         {question.company}
+                       </span>
                       </div>
                       <span className="text-sm text-white/60 font-medium">3-5 min</span>
                     </div>
