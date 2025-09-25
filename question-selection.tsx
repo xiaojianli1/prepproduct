@@ -9,9 +9,10 @@ import { getRecommendedQuestions, type Question, type RecommendedQuestion } from
 interface QuestionSelectionProps {
   onStartSession?: (questions: any[]) => void
   onBack?: () => void // Added onBack prop for navigation
+  jobDescription?: string
 }
 
-export default function QuestionSelection({ onStartSession, onBack }: QuestionSelectionProps) {
+export default function QuestionSelection({ onStartSession, onBack, jobDescription = "" }: QuestionSelectionProps) {
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedQuestionType, setSelectedQuestionType] = useState("All Types")
@@ -42,17 +43,13 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
       const questions = await fetchAllQuestions()
       setAllQuestions(questions)
       
-      // For now, we'll use a sample job description to test recommendations
-      // In the future, this will come from the previous screen
-      const sampleJobDescription = "We are looking for a Product Manager with experience in mobile apps, user analytics, A/B testing, and cross-functional collaboration. The ideal candidate should have experience with product strategy, user research, and working with engineering teams."
-      
       if (questions.length > 0) {
-        const recommendations = getRecommendedQuestions(sampleJobDescription, questions)
+        const recommendations = getRecommendedQuestions(jobDescription, questions)
         setRecommendedQuestions(recommendations)
       }
     }
     loadQuestions()
-  }, [])
+  }, [jobDescription])
 
   // Auto-select recommended questions
   const handleSelectRecommended = () => {

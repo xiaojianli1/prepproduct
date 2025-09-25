@@ -12,6 +12,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingText, setLoadingText] = useState("")
   const [selectedQuestions, setSelectedQuestions] = useState<any[]>([])
+  const [jobDescription, setJobDescription] = useState("")
 
   const handleTransition = (targetScreen: "resume" | "selection" | "interview" | "feedback", text: string) => {
     setIsLoading(true)
@@ -23,7 +24,8 @@ export default function App() {
     }, 2500)
   }
 
-  const handleResumeComplete = () => {
+  const handleResumeComplete = (jobDesc: string) => {
+    setJobDescription(jobDesc)
     handleTransition("selection", "Analyzing your profile...")
   }
 
@@ -57,7 +59,7 @@ export default function App() {
   }
 
   if (currentScreen === "selection") {
-    return <QuestionSelection onStartSession={handleStartSession} onBack={handleBackToResume} />
+    return <QuestionSelection onStartSession={handleStartSession} onBack={handleBackToResume} jobDescription={jobDescription} />
   }
 
   if (currentScreen === "interview") {

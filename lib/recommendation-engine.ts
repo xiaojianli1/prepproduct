@@ -43,7 +43,7 @@ export function extractKeywords(jobDescription: string): string[] {
 export function calculateScore(jobKeywords: string[], questionKeywords: string): number {
   if (!questionKeywords) return 0;
   
-  const qKeywords = questionKeywords.toLowerCase().split(/[,\s]+/).filter(k => k.length > 0);
+  const qKeywords = questionKeywords.toLowerCase().split(/[,\s]+/).filter(k => k.length > 2);
   let score = 0;
   const matchedKeywords: string[] = [];
 
@@ -52,12 +52,16 @@ export function calculateScore(jobKeywords: string[], questionKeywords: string):
       // Exact match
       if (jobKeyword === qKeyword) {
         score += 3;
-        matchedKeywords.push(qKeyword);
+        if (!matchedKeywords.includes(qKeyword)) {
+          matchedKeywords.push(qKeyword);
+        }
       }
       // Partial match (contains)
       else if (jobKeyword.includes(qKeyword) || qKeyword.includes(jobKeyword)) {
         score += 1;
-        matchedKeywords.push(qKeyword);
+        if (!matchedKeywords.includes(qKeyword)) {
+          matchedKeywords.push(qKeyword);
+        }
       }
     }
   }
@@ -126,7 +130,7 @@ export function getRecommendedQuestions(
 function getMatchedKeywords(jobKeywords: string[], questionKeywords: string): string[] {
   if (!questionKeywords) return [];
   
-  const qKeywords = questionKeywords.toLowerCase().split(/[,\s]+/).filter(k => k.length > 0);
+  const qKeywords = questionKeywords.toLowerCase().split(/[,\s]+/).filter(k => k.length > 2);
   const matched: string[] = [];
 
   for (const jobKeyword of jobKeywords) {

@@ -6,7 +6,7 @@ import { useState, useRef } from "react"
 import { ArrowLeft, Upload, Building2, Briefcase } from "lucide-react"
 
 interface ResumeUploadProps {
-  onContinue: () => void
+  onContinue: (jobDescription: string) => void
   onBack: () => void
 }
 
@@ -59,7 +59,7 @@ export default function ResumeUpload({ onContinue, onBack }: ResumeUploadProps) 
 
   const handleContinue = () => {
     // In a real app, you'd save this data to context or send to backend
-    onContinue()
+    onContinue(jobDescription)
   }
 
   const handleProceedToDetails = () => {
