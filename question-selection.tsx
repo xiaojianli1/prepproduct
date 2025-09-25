@@ -10,8 +10,6 @@ interface QuestionSelectionProps {
   onStartSession?: () => void
   onBack?: () => void // Added onBack prop for navigation
 }
-
-export default function QuestionSelection({ onStartSession, onBack }: QuestionSelectionProps) {
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
@@ -44,8 +42,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
   const getFilteredRecommendedQuestions = () => {
     return recommendedQuestions.filter((question) => {
-      const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level === selectedDifficulty
-      const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
         question.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -59,7 +55,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
       .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
       .filter((question) => {
         const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
-        const searchMatch =
           searchQuery === "" ||
           question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           question.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
