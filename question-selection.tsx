@@ -10,11 +10,13 @@ interface QuestionSelectionProps {
   onStartSession?: () => void
   onBack?: () => void // Added onBack prop for navigation
 }
+
+export default function QuestionSelection({ onStartSession, onBack }: QuestionSelectionProps) {
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
   const [recommendedQuestions, setRecommendedQuestions] = useState<RecommendedQuestion[]>([])
-
+  const [selectedCategory, setSelectedCategory] = useState("All Categories")
 
   // Load questions from Supabase on component mount
   useEffect(() => {
@@ -42,9 +44,10 @@ interface QuestionSelectionProps {
 
   const getFilteredRecommendedQuestions = () => {
     return recommendedQuestions.filter((question) => {
+      const searchMatch = 
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        question.category.toLowerCase().includes(searchQuery.toLowerCase())
+        question.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
       return searchMatch
     })
@@ -55,15 +58,19 @@ interface QuestionSelectionProps {
       .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
       .filter((question) => {
         const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
+        const searchMatch = 
           searchQuery === "" ||
           question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           question.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
           question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
-        return searchMatch
+        return categoryMatch && searchMatch
       })
   }
 
   const filteredRecommendedQuestions = getFilteredRecommendedQuestions()
+  const showRecommendedSection = filteredRecommendedQuestions.length > 0
+  const filteredQuestions = getFilteredQuestions()
+
   return (
     <div
       className="min-h-screen"
@@ -484,5 +491,3 @@ interface QuestionSelectionProps {
     </div>
   )
 }
-
-export default function QuestionSelection({ onStartSession, onBack }: QuestionSelectionProps) {
