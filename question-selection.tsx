@@ -121,7 +121,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 style={{
                   backgroundColor: "rgba(255, 255, 255, 0.05)",
                   boxShadow: "0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
-                  setSelectedDifficulty("All Levels")
                 }}
               >
                 <ArrowLeft className="w-5 h-5 text-white/90" strokeWidth={1.5} />
