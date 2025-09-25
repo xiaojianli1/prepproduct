@@ -243,7 +243,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
             {/* AI Recommended Questions Section */}
             {recommendedQuestions.length > 0 && (
-              <div className="mb-12">
+              <>
+                <div className="mb-12">
                 <div className="flex items-center gap-3 mb-6">
                   <h3 className="text-lg font-semibold text-white tracking-tight">Recommended for You</h3>
                   <div className="group relative">
@@ -257,7 +258,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     </div>
                   </div>
                 </div>
-                    <Button
+                  <Button
                       onClick={handleSelectRecommended}
                       className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300"
                       style={{
@@ -407,8 +408,9 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        {/* Checkbox */}
-                        <div
+                </div>
+              </>
+            )}
                           className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
                             isSelected ? "bg-blue-500 border-blue-500" : "border-white/30 hover:border-white/50"
                           }`}
