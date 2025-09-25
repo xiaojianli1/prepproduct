@@ -15,6 +15,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const [selectedCategory, setSelectedCategory] = useState("All Categories")
   const [selectedDifficulty, setSelectedDifficulty] = useState("All Levels")
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
   const [recommendedQuestions, setRecommendedQuestions] = useState<RecommendedQuestion[]>([])
@@ -47,6 +48,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
   const getFilteredRecommendedQuestions = () => {
     return recommendedQuestions.filter((question) => {
+      const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level === selectedDifficulty
       const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
       const searchMatch =
         searchQuery === "" ||
@@ -303,7 +305,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
                 <div className="space-y-4">
                   {recommendedQuestions.map((question, index) => {
-                    const isSelected = selectedQuestions.includes(parseInt(question.id))
+                    const isSelected = selectedQuestions.includes(question.id)
                     return (
                       <div
                         key={`recommended-${index}`}
@@ -321,9 +323,9 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                         }}
                         onClick={() => {
                           setSelectedQuestions((prev) =>
-                            prev.includes(parseInt(question.id))
-                              ? prev.filter((id) => id !== parseInt(question.id))
-                              : [...prev, parseInt(question.id)],
+                            prev.includes(question.id)
+                              ? prev.filter((id) => id !== question.id)
+                              : [...prev, question.id],
                           )
                         }}
                       >
