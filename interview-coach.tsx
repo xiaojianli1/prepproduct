@@ -17,6 +17,8 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const [waveformData, setWaveformData] = useState(Array(20).fill(0))
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [questionVisible, setQuestionVisible] = useState(true)
+  const [liveTranscription, setLiveTranscription] = useState("")
+  const [isTranscribing, setIsTranscribing] = useState(false)
 
   // Use ref to store frozen waveform to avoid dependency issues
   const frozenWaveformRef = useRef(Array(20).fill(0))
