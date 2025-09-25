@@ -257,11 +257,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     </div>
                   </div>
                 </div>
-                  <label className="text-sm font-medium text-white/80">Question Type</label>
-                {recommendedQuestions.length > 0 && (
-                  <div className="mb-6 flex items-center gap-3">
-                      value={selectedQuestionType}
-                      onChange={(e) => setSelectedQuestionType(e.target.value)}
+                    <Button
+                      onClick={handleSelectRecommended}
                       className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300"
                       style={{
                         background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",
@@ -269,11 +266,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                         color: "white",
                       }}
                     >
-                      <option value="All Types" className="bg-gray-800">All Types</option>
-                      <option value="product design" className="bg-gray-800">product design</option>
-                      <option value="metrics & goal-setting" className="bg-gray-800">metrics & goal-setting</option>
-                      <option value="behavioral" className="bg-gray-800">behavioral</option>
-                      <option value="Root Cause Analysis" className="bg-gray-800">Root Cause Analysis</option>
+                      Select All Recommended ({recommendedQuestions.length})
                     </Button>
                   </div>
                 )}
