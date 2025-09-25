@@ -19,15 +19,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
   const [recommendedQuestions, setRecommendedQuestions] = useState<RecommendedQuestion[]>([])
 
-  const categories = [
-    "All Categories",
-    "Product Strategy",
-    "Product Design",
-    "Product Analytics",
-    "Leadership & Communication",
-    "Technical Understanding",
-  ]
-
   const difficulties = ["All Levels", "Entry Level", "Intermediate", "Advanced"]
 
   // Load questions from Supabase on component mount
@@ -57,13 +48,12 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const getFilteredRecommendedQuestions = () => {
     return recommendedQuestions.filter((question) => {
       const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
-      const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level === selectedDifficulty
       const searchMatch =
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
         question.category.toLowerCase().includes(searchQuery.toLowerCase())
-        question.category.toLowerCase().includes(searchQuery.toLowerCase())
-      return categoryMatch && difficultyMatch && searchMatch
+        question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
+      return difficultyMatch && searchMatch
     })
   }
 
@@ -72,18 +62,17 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
       .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
       .filter((question) => {
         const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
-        const difficultyMatch = selectedDifficulty === "All Levels" || question.difficulty_level === selectedDifficulty
         const searchMatch =
           searchQuery === "" ||
           question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           question.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          question.category.toLowerCase().includes(searchQuery.toLowerCase())
-        return categoryMatch && difficultyMatch && searchMatch
+          question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
+        return difficultyMatch && searchMatch
       })
   }
 
   const filteredRecommendedQuestions = getFilteredRecommendedQuestions()
-  const showRecommendedSection = selectedCategory === "All Categories" || filteredRecommendedQuestions.length > 0
+  const showRecommendedSection = filteredRecommendedQuestions.length > 0
   const filteredQuestions = getFilteredQuestions()
 
   return (
@@ -152,7 +141,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 <h3 className="text-lg font-semibold text-white tracking-tight">Filters</h3>
                 <button
                   onClick={() => {
-                    setSelectedCategory("All Categories")
                     setSelectedDifficulty("All Levels")
                     setSearchQuery("")
                   }}
@@ -163,28 +151,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
               </div>
 
               <div className="space-y-6">
-                {/* Category Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-white/80 mb-3">Category</label>
-                  <div className="relative">
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="w-full px-3 py-2 border border-white/20 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
-                      style={{
-                        backgroundColor: "rgba(255, 255, 255, 0.05)",
-                        backdropFilter: "blur(10px)",
-                      }}
-                    >
-                      {categories.map((category) => (
-                        <option key={category} value={category} style={{ backgroundColor: "#2a2a2a", color: "white" }}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none" />
-                  </div>
-                </div>
 
                 {/* Difficulty Filter */}
                 <div>
@@ -278,19 +244,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
             </div>
 
             {/* Active Filter Chips */}
-            {(selectedCategory !== "All Categories" || selectedDifficulty !== "All Levels" || searchQuery !== "") && (
+            {(selectedDifficulty !== "All Levels" || searchQuery !== "") && (
               <div className="flex flex-wrap gap-2 mb-8">
-                {selectedCategory !== "All Categories" && (
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border border-white/20 bg-white/5">
-                    <span className="text-white/80">{selectedCategory}</span>
-                    <button
-                      onClick={() => setSelectedCategory("All Categories")}
-                      className="text-white/60 hover:text-white/80"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
                 {selectedDifficulty !== "All Levels" && (
                   <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border border-white/20 bg-white/5">
                     <span className="text-white/80">{selectedDifficulty}</span>
@@ -394,11 +349,11 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                             <span
                               className="px-3 py-1 rounded-full text-xs font-medium"
                               style={{
-                                backgroundColor: question.score > 0 ? "rgba(34, 197, 94, 0.2)" : "rgba(156, 163, 175, 0.2)",
-                                color: question.score > 0 ? "#22C55E" : "#9CA3AF",
+                                backgroundColor: "rgba(156, 163, 175, 0.2)",
+                                color: "#9CA3AF",
                               }}
                             >
-                              {question.score > 0 ? "AI Matched" : "Fallback"}
+                              {question.company}
                             </span>
                             <span
                               className="px-3 py-1 rounded-full text-xs font-medium"
@@ -417,7 +372,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                           {question.title}
                         </h3>
 
-                        <p className="text-white/70 leading-relaxed text-sm mb-2">{question.description}</p>
 
                         {question.matchedKeywords.length > 0 && (
                           <div className="flex items-center gap-2 text-sm" style={{ fontSize: "0.85rem" }}>
@@ -526,7 +480,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                       {question.question_text}
                     </h3>
 
-                    <p className="text-white/70 leading-relaxed text-sm mb-2">{question.description}</p>
                   </div>
                 )
               })}

@@ -2,9 +2,10 @@
 export interface Question {
   id: string;
   question_text: string;
-  category: string;
+  company: string;
   difficulty_level: string;
   keywords: string;
+  sample_answer: string;
 }
 
 export interface RecommendedQuestion extends Question {
