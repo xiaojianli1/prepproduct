@@ -1,17 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import {
-  ArrowLeft,
-  CheckCircle,
-  Download,
-  RotateCcw,
-  Lightbulb,
-  BarChart3,
-  Clock,
-  User,
-  ChevronRight,
-} from "lucide-react"
+import { ArrowLeft, CircleCheck as CheckCircle, Download, RotateCcw, Lightbulb, ChartBar as BarChart3, Clock, User, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 // Sample feedback data for each question
@@ -350,7 +340,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
 
                   {/* Question Text */}
                   <div className="space-y-4">
-                    <h3 className="text-xl font-medium text-white leading-relaxed">{item.question_text}</h3>
+                    <h3 className="text-xl font-medium text-white leading-relaxed">{item.question}</h3>
                   </div>
 
                   <div className="space-y-6">
