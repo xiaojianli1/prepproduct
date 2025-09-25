@@ -592,7 +592,13 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
               </span>
             </div>
             <Button
-              onClick={onStartSession}
+              onClick={() => {
+                const questionsToPass = [
+                  ...recommendedQuestions.filter(q => selectedQuestions.includes(q.id)),
+                  ...allQuestions.filter(q => selectedQuestions.includes(q.id) && !recommendedQuestions.some(rq => rq.id === q.id))
+                ]
+                onStartSession?.(questionsToPass)
+              }}
               className="py-2 px-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-xs leading-tight"
               style={{
                 background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",
