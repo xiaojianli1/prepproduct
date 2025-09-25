@@ -18,6 +18,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
   const [recommendedQuestions, setRecommendedQuestions] = useState<RecommendedQuestion[]>([])
   const [selectedCategory, setSelectedCategory] = useState("All Categories")
+  const [displayedQuestionsCount, setDisplayedQuestionsCount] = useState(10)
 
   const questionTypes = [
     "All Types",
@@ -74,11 +75,30 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
           question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
         return typeMatch && searchMatch
       })
+      .slice(0, displayedQuestionsCount)
   }
 
   const filteredRecommendedQuestions = getFilteredRecommendedQuestions()
   const showRecommendedSection = filteredRecommendedQuestions.length > 0
   const filteredQuestions = getFilteredQuestions()
+  
+  // Calculate total available questions for load more button
+  const totalAvailableQuestions = allQuestions
+    .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
+    .filter((question) => {
+      const typeMatch = selectedQuestionType === "All Types" || question.question_type === selectedQuestionType
+      const searchMatch = 
+        searchQuery === "" ||
+        question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
+      return typeMatch && searchMatch
+    }).length
+  
+  const hasMoreQuestions = displayedQuestionsCount < totalAvailableQuestions
+
+  const handleLoadMore = () => {
+    setDisplayedQuestionsCount(prev => prev + 10)
+  }
 
   return (
     <div
@@ -460,7 +480,72 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
               })}
             </div>
 
-            <div className="mt-12 mb-32 text-center">
+            {hasMoreQuestions && (
+              <div className="mt-12 mb-32 text-center">
+                <Button
+                  onClick={handleLoadMore}
+                  variant="ghost"
+                  className="px-6 py-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-sm border border-white/20 hover:border-white/30"
+                  style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.05)",
+                    color: "rgba(255, 255, 255, 0.9)",
+                  }}
+                >
+                  Load More Questions ({totalAvailableQuestions - displayedQuestionsCount} remaining)
+                </Button>
+              </div>
+            )}
+
+            {!hasMoreQuestions && filteredQuestions.length > 0 && (
+              <div className="mt-12 mb-32 text-center">
+                <p className="text-white/60 text-sm">All questions loaded</p>
+              </div>
+            )}
+
+            {filteredQuestions.length === 0 && !showRecommendedSection && (
+              <div className="mt-12 mb-32 text-center">
+                <p className="text-white/60 text-sm">No questions match your current filters</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky Summary Bar */}
+      {selectedQuestions.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+          <div
+            className="flex items-center gap-4 px-6 py-3 rounded-2xl backdrop-blur-3xl border border-white/15 shadow-xl"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.03)",
+              boxShadow:
+                "0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)",
+            }}
+          >
+            <div className="text-sm text-white/90">
+              <span className="font-medium">{selectedQuestions.length} selected</span>
+              <span className="text-white/60 ml-2">
+                • Est. {selectedQuestions.length * 4}-{selectedQuestions.length * 6} min
+              </span>
+            </div>
+            <Button
+              onClick={onStartSession}
+              className="py-2 px-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-xs leading-tight"
+              style={{
+                background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",
+                boxShadow: "0 4px 12px rgba(0, 122, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+                color: "white",
+              }}
+            >
+              Start Session
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
               <Button
                 variant="ghost"
                 className="px-6 py-3 rounded-xl font-medium tracking-wide transition-all duration-300 text-sm border border-white/20 hover:border-white/30"
