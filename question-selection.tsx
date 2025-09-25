@@ -155,6 +155,24 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                 </button>
               </div>
 
+              {/* Question Type Filter */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-white/80 mb-3">Question Type</label>
+                <div className="relative">
+                  <select
+                    value={selectedQuestionType}
+                    onChange={(e) => setSelectedQuestionType(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-white/15 text-white bg-white/5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer"
+                  >
+                    {questionTypes.map((type) => (
+                      <option key={type} value={type} className="bg-gray-800 text-white">
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none" />
+                </div>
+              </div>
 
               {/* Start Practice Buttons */}
               <div className="mt-8 pt-6 border-t border-white/15 space-y-3">
@@ -243,8 +261,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
 
             {/* AI Recommended Questions Section */}
             {recommendedQuestions.length > 0 && (
-              <>
-                <div className="mb-12">
+              <div className="mb-12">
                 <div className="flex items-center gap-3 mb-6">
                   <h3 className="text-lg font-semibold text-white tracking-tight">Recommended for You</h3>
                   <div className="group relative">
@@ -258,19 +275,17 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     </div>
                   </div>
                 </div>
-                  <Button
-                      onClick={handleSelectRecommended}
-                      className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300"
-                      style={{
-                        background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",
-                        boxShadow: "0 4px 12px rgba(0, 122, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-                        color: "white",
-                      }}
-                    >
-                      Select All Recommended ({recommendedQuestions.length})
-                    </Button>
-                  </div>
-                )}
+                <Button
+                  onClick={handleSelectRecommended}
+                  className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 mb-6"
+                  style={{
+                    background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",
+                    boxShadow: "0 4px 12px rgba(0, 122, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+                    color: "white",
+                  }}
+                >
+                  Select All Recommended ({recommendedQuestions.length})
+                </Button>
 
                 <div className="space-y-4">
                   {recommendedQuestions.map((question, index) => {
@@ -343,7 +358,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                           {question.question_text}
                         </h3>
 
-
                         {question.matchedKeywords.length > 0 && (
                           <div className="flex items-center gap-2 text-sm" style={{ fontSize: "0.85rem" }}>
                             <div className="flex items-center gap-1.5 font-medium" style={{ color: "#22C55E" }}>
@@ -368,15 +382,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                       </div>
                     )
                   })}
-                </div>
-              </div>
-            )}
-
-            {/* Static Recommended Questions Section */}
-            {showRecommendedSection && filteredRecommendedQuestions.length > 0 && recommendedQuestions.length === 0 && (
-              <div className="mb-12">
-                <div className="flex items-center gap-3 mb-6">
-                  <h3 className="text-lg font-semibold text-white tracking-tight">Suggested Questions</h3>
                 </div>
               </div>
             )}
@@ -408,9 +413,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                </div>
-              </>
-            )}
+                        {/* Checkbox */}
+                        <div
                           className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
                             isSelected ? "bg-blue-500 border-blue-500" : "border-white/30 hover:border-white/50"
                           }`}
@@ -451,7 +455,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     <h3 className="text-lg font-semibold text-white mb-3 leading-relaxed tracking-tight">
                       {question.question_text}
                     </h3>
-
                   </div>
                 )
               })}
