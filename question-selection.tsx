@@ -64,9 +64,6 @@ interface QuestionSelectionProps {
   }
 
   const filteredRecommendedQuestions = getFilteredRecommendedQuestions()
-  const showRecommendedSection = filteredRecommendedQuestions.length > 0
-  const filteredQuestions = getFilteredQuestions()
-
   return (
     <div
       className="min-h-screen"
@@ -487,3 +484,5 @@ interface QuestionSelectionProps {
     </div>
   )
 }
+
+export default function QuestionSelection({ onStartSession, onBack }: QuestionSelectionProps) {
