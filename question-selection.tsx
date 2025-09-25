@@ -67,13 +67,12 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
     return allQuestions
       .filter((q) => !recommendedQuestions.some((rq) => rq.id === q.id))
       .filter((question) => {
-        const categoryMatch = selectedCategory === "All Categories" || question.category === selectedCategory
+        const typeMatch = selectedQuestionType === "All Types" || question.question_type === selectedQuestionType
         const searchMatch = 
           searchQuery === "" ||
-          question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          question.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
           question.keywords.toLowerCase().includes(searchQuery.toLowerCase())
-        return categoryMatch && searchMatch
+        return typeMatch && searchMatch
       })
   }
 
@@ -258,11 +257,11 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     </div>
                   </div>
                 </div>
-
+                  <label className="text-sm font-medium text-white/80">Question Type</label>
                 {recommendedQuestions.length > 0 && (
                   <div className="mb-6 flex items-center gap-3">
-                    <Button
-                      onClick={handleSelectRecommended}
+                      value={selectedQuestionType}
+                      onChange={(e) => setSelectedQuestionType(e.target.value)}
                       className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300"
                       style={{
                         background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",
@@ -270,7 +269,11 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                         color: "white",
                       }}
                     >
-                      Select All Recommended ({recommendedQuestions.length})
+                      <option value="All Types" className="bg-gray-800">All Types</option>
+                      <option value="product design" className="bg-gray-800">product design</option>
+                      <option value="metrics & goal-setting" className="bg-gray-800">metrics & goal-setting</option>
+                      <option value="behavioral" className="bg-gray-800">behavioral</option>
+                      <option value="Root Cause Analysis" className="bg-gray-800">Root Cause Analysis</option>
                     </Button>
                   </div>
                 )}
@@ -435,16 +438,16 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                             color: "#007AFF",
                           }}
                         >
-                          {question.category}
+                          {question.question_type}
                         </span>
                         <span
                           className="px-3 py-1 rounded-full text-xs font-medium"
                           style={{
-                            backgroundColor: "rgba(255, 255, 255, 0.1)",
-                            color: "rgba(255, 255, 255, 0.8)",
+                            backgroundColor: "rgba(156, 163, 175, 0.2)",
+                            color: "#9CA3AF",
                           }}
                         >
-                          {question.difficulty_level}
+                          {question.company}
                         </span>
                       </div>
                       <span className="text-sm text-white/60 font-medium">3-5 min</span>
