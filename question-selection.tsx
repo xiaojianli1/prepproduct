@@ -16,10 +16,8 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
   const [selectedDifficulty, setSelectedDifficulty] = useState("All Levels")
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [jobDescription, setJobDescription] = useState("")
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
   const [recommendedQuestions, setRecommendedQuestions] = useState<RecommendedQuestion[]>([])
-  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false)
 
   const categories = [
     "All Categories",
@@ -37,29 +35,18 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
     const loadQuestions = async () => {
       const questions = await fetchAllQuestions()
       setAllQuestions(questions)
+      
+      // For now, we'll use a sample job description to test recommendations
+      // In the future, this will come from the previous screen
+      const sampleJobDescription = "We are looking for a Product Manager with experience in mobile apps, user analytics, A/B testing, and cross-functional collaboration. The ideal candidate should have experience with product strategy, user research, and working with engineering teams."
+      
+      if (questions.length > 0) {
+        const recommendations = getRecommendedQuestions(sampleJobDescription, questions)
+        setRecommendedQuestions(recommendations)
+      }
     }
     loadQuestions()
   }, [])
-
-  // Generate recommendations when job description changes
-  const handleJobDescriptionChange = (value: string) => {
-    setJobDescription(value)
-
-    if (value.trim() && allQuestions.length > 0) {
-      setIsLoadingRecommendations(true)
-      // Add small delay to avoid too frequent updates
-      const timeoutId = setTimeout(() => {
-        const recommendations = getRecommendedQuestions(value, allQuestions)
-        setRecommendedQuestions(recommendations)
-        setIsLoadingRecommendations(false)
-      }, 500)
-      
-      return () => clearTimeout(timeoutId)
-    } else {
-      setRecommendedQuestions([])
-      setIsLoadingRecommendations(false)
-    }
-  }
 
   // Auto-select recommended questions
   const handleSelectRecommended = () => {
@@ -290,47 +277,6 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
               </div>
             </div>
 
-            {/* Job Description Input */}
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-white/80 mb-3">
-                Job Description (Optional)
-              </label>
-              <p className="text-xs text-white/60 mb-3">
-                Paste the job description to get personalized question recommendations
-              </p>
-              <textarea
-                value={jobDescription}
-                onChange={(e) => handleJobDescriptionChange(e.target.value)}
-                placeholder="Paste the job description here to get AI-powered question recommendations..."
-                rows={4}
-                className="w-full p-4 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none backdrop-blur-sm text-sm"
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  backdropFilter: "blur(10px)",
-                }}
-              />
-              
-              {/* Quick select recommended questions */}
-              {recommendedQuestions.length > 0 && (
-                <div className="mt-3 flex items-center gap-3">
-                  <Button
-                    onClick={handleSelectRecommended}
-                    className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300"
-                    style={{
-                      background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",
-                      boxShadow: "0 4px 12px rgba(0, 122, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-                      color: "white",
-                    }}
-                  >
-                    Select All Recommended ({recommendedQuestions.length})
-                  </Button>
-                  {isLoadingRecommendations && (
-                    <div className="text-xs text-white/60">Analyzing job description...</div>
-                  )}
-                </div>
-              )}
-            </div>
-
             {/* Active Filter Chips */}
             {(selectedCategory !== "All Categories" || selectedDifficulty !== "All Levels" || searchQuery !== "") && (
               <div className="flex flex-wrap gap-2 mb-8">
@@ -378,11 +324,27 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
                     </div>
                     <div className="absolute left-6 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                       <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap border border-white/20 shadow-xl">
-                        Questions selected based on your job description
+                        Questions recommended based on your profile
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {recommendedQuestions.length > 0 && (
+                  <div className="mb-6 flex items-center gap-3">
+                    <Button
+                      onClick={handleSelectRecommended}
+                      className="px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300"
+                      style={{
+                        background: "linear-gradient(135deg, #007AFF 0%, #0056CC 100%)",
+                        boxShadow: "0 4px 12px rgba(0, 122, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+                        color: "white",
+                      }}
+                    >
+                      Select All Recommended ({recommendedQuestions.length})
+                    </Button>
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   {recommendedQuestions.map((question, index) => {
