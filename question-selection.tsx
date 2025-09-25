@@ -62,6 +62,7 @@ export default function QuestionSelection({ onStartSession, onBack }: QuestionSe
         searchQuery === "" ||
         question.question_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
         question.category.toLowerCase().includes(searchQuery.toLowerCase())
+        question.category.toLowerCase().includes(searchQuery.toLowerCase())
       return categoryMatch && difficultyMatch && searchMatch
     })
   }
