@@ -21,6 +21,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [audioChunks, setAudioChunks] = useState<Blob[]>([])
   const [stream, setStream] = useState<MediaStream | null>(null)
+  const [liveTranscription, setLiveTranscription] = useState("")
 
   // Use ref to store frozen waveform to avoid dependency issues
   const frozenWaveformRef = useRef(Array(20).fill(0))
