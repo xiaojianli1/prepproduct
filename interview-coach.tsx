@@ -20,6 +20,9 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const [liveTranscription, setLiveTranscription] = useState("")
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [finalTranscribing, setFinalTranscribing] = useState(false)
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([])
+  const [stream, setStream] = useState<MediaStream | null>(null)
 
   // Use ref to store frozen waveform to avoid dependency issues
   const frozenWaveformRef = useRef(Array(20).fill(0))
@@ -54,6 +57,11 @@ export default function Component({ questions, onBack, onEndSession }: Interview
 
   // Handle next question with smooth transition
   const handleNextQuestion = () => {
+    // Stop recording and get final transcription
+    if (isRecording) {
+      stopRecording(true) // true indicates this is for next question
+    }
+
     if (currentQuestionIndex >= totalQuestions - 1) {
       // Last question - could show completion screen
       console.log("All questions completed!")
@@ -66,12 +74,8 @@ export default function Component({ questions, onBack, onEndSession }: Interview
     // Start fade out animation
     setQuestionVisible(false)
 
-    // Reset recording state immediately
-    setIsRecording(false)
-    setIsPaused(false)
-    setTimeElapsed(0)
-    setWaveformData(Array(20).fill(0))
-    frozenWaveformRef.current = Array(20).fill(0)
+    // Reset states
+    resetRecordingState()
 
     // Wait for fade out, then change question and fade in
     setTimeout(() => {
@@ -87,11 +91,11 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   // Handle end session
   const handleEndSession = () => {
     console.log("End session clicked")
-    setIsRecording(false)
-    setIsPaused(false)
-    setTimeElapsed(0)
-    setWaveformData(Array(20).fill(0))
-    frozenWaveformRef.current = Array(20).fill(0)
+    if (isRecording) {
+      stopRecording(false) // false indicates this is for ending session
+    }
+    resetRecordingState()
+    cleanupMediaResources()
     onEndSession?.()
   }
 
@@ -142,6 +146,212 @@ export default function Component({ questions, onBack, onEndSession }: Interview
     }
   }, [isRecording, isPaused])
 
+  // Audio recording functions
+  const startRecording = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100,
+        } 
+      })
+      
+      setStream(mediaStream)
+      
+      const recorder = new MediaRecorder(mediaStream, {
+        mimeType: 'audio/webm;codecs=opus'
+      })
+      
+      const chunks: Blob[] = []
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data)
+          setAudioChunks(prev => [...prev, event.data])
+        }
+      }
+      
+      recorder.onstop = () => {
+        console.log('Recording stopped, chunks:', chunks.length)
+      }
+      
+      recorder.start(1000) // Collect data every second
+      setMediaRecorder(recorder)
+      setAudioChunks([])
+      setIsRecording(true)
+      setIsPaused(false)
+      setTimeElapsed(0)
+      setLiveTranscription("")
+      
+      console.log('Recording started successfully')
+    } catch (error) {
+      console.error('Error starting recording:', error)
+      alert('Could not access microphone. Please check permissions.')
+    }
+  }
+
+  const pauseRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.pause()
+      setIsPaused(true)
+      console.log('Recording paused')
+    }
+  }
+
+  const resumeRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === 'paused') {
+      mediaRecorder.resume()
+      setIsPaused(false)
+      console.log('Recording resumed')
+    }
+  }
+
+  const stopRecording = (isForNextQuestion: boolean = false) => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop()
+      
+      // Get final transcription
+      if (audioChunks.length > 0) {
+        getFinalTranscription(isForNextQuestion)
+      }
+    }
+    
+    setIsRecording(false)
+    setIsPaused(false)
+  }
+
+  const resetRecordingState = () => {
+    setIsRecording(false)
+    setIsPaused(false)
+    setTimeElapsed(0)
+    setWaveformData(Array(20).fill(0))
+    frozenWaveformRef.current = Array(20).fill(0)
+    setLiveTranscription("")
+    setIsTranscribing(false)
+    setFinalTranscribing(false)
+    setAudioChunks([])
+  }
+
+  const cleanupMediaResources = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      setStream(null)
+    }
+    if (mediaRecorder) {
+      setMediaRecorder(null)
+    }
+  }
+
+  // Transcription functions
+  const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
+    try {
+      const formData = new FormData()
+      formData.append('audio', audioBlob, 'recording.webm')
+      
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData,
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
+      
+      return data.transcription || ''
+    } catch (error) {
+      console.error('Transcription error:', error)
+      return ''
+    }
+  }
+
+  const startLiveTranscription = async () => {
+    if (audioChunks.length === 0) return
+    
+    setIsTranscribing(true)
+    
+    try {
+      // Use recent chunks for live transcription (last 3 seconds worth)
+      const recentChunks = audioChunks.slice(-3)
+      const audioBlob = new Blob(recentChunks, { type: 'audio/webm;codecs=opus' })
+      
+      if (audioBlob.size > 1000) { // Only transcribe if we have substantial audio
+        const transcription = await transcribeAudio(audioBlob)
+        
+        if (transcription.trim()) {
+          // Keep only last 200 characters to prevent overflow
+          const truncated = transcription.length > 200 
+            ? '...' + transcription.slice(-197)
+            : transcription
+          setLiveTranscription(truncated)
+        }
+      }
+    } catch (error) {
+      console.error('Live transcription error:', error)
+    } finally {
+      setIsTranscribing(false)
+    }
+  }
+
+  const getFinalTranscription = async (isForNextQuestion: boolean) => {
+    if (audioChunks.length === 0) return
+    
+    setFinalTranscribing(true)
+    
+    try {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' })
+      const transcription = await transcribeAudio(audioBlob)
+      
+      if (transcription.trim()) {
+        console.log('Final transcription:', transcription)
+        // Here you could save the transcription to your database
+        // or pass it to a parent component
+        
+        if (isForNextQuestion) {
+          // Show final transcription briefly before moving to next question
+          setLiveTranscription(transcription)
+          setTimeout(() => {
+            setLiveTranscription("")
+          }, 2000)
+        }
+      }
+    } catch (error) {
+      console.error('Final transcription error:', error)
+    } finally {
+      setFinalTranscribing(false)
+    }
+  }
+
+  // Live transcription effect - runs every 3 seconds during recording
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    
+    if (isRecording && !isPaused && audioChunks.length > 0) {
+      // Start live transcription after 3 seconds of recording
+      interval = setInterval(() => {
+        startLiveTranscription()
+      }, 3000)
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval)
+      }
+    }
+  }, [isRecording, isPaused, audioChunks.length])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupMediaResources()
+    }
+  }, [])
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
