@@ -17,8 +17,6 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const [waveformData, setWaveformData] = useState(Array(20).fill(0))
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [questionVisible, setQuestionVisible] = useState(true)
-  const [liveTranscription, setLiveTranscription] = useState("")
-  const [isTranscribing, setIsTranscribing] = useState(false)
   const [finalTranscribing, setFinalTranscribing] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [audioChunks, setAudioChunks] = useState<Blob[]>([])
@@ -45,13 +43,15 @@ export default function Component({ questions, onBack, onEndSession }: Interview
     if (!isRecording) {
       // Start recording
       console.log("Starting recording...")
-      setIsRecording(true)
-      setIsPaused(false)
-      setTimeElapsed(0)
+      startRecording()
     } else {
       // Toggle pause/resume
       console.log(isPaused ? "Resuming recording..." : "Pausing recording...")
-      setIsPaused(!isPaused)
+      if (isPaused) {
+        resumeRecording()
+      } else {
+        pauseRecording()
+      }
     }
   }
 
@@ -228,7 +228,6 @@ export default function Component({ questions, onBack, onEndSession }: Interview
     setWaveformData(Array(20).fill(0))
     frozenWaveformRef.current = Array(20).fill(0)
     setLiveTranscription("")
-    setIsTranscribing(false)
     setFinalTranscribing(false)
     setAudioChunks([])
   }
@@ -327,24 +326,6 @@ export default function Component({ questions, onBack, onEndSession }: Interview
       setFinalTranscribing(false)
     }
   }
-
-  // Live transcription effect - runs every 3 seconds during recording
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-    
-    if (isRecording && !isPaused && audioChunks.length > 0) {
-      // Start live transcription after 3 seconds of recording
-      interval = setInterval(() => {
-        startLiveTranscription()
-      }, 3000)
-    }
-    
-    return () => {
-      if (interval) {
-        clearInterval(interval)
-      }
-    }
-  }, [isRecording, isPaused, audioChunks.length])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -610,34 +591,6 @@ export default function Component({ questions, onBack, onEndSession }: Interview
 
       {/* Bottom Controls */}
       <div className="w-full max-w-md mx-auto mb-6 z-20">
-        {/* Live Transcription Display */}
-        {(isRecording && liveTranscription) && (
-          <div className="mb-4">
-            <div
-              className="p-4 rounded-xl backdrop-blur-3xl border border-white/15 shadow-xl min-h-[60px]"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.03)",
-                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08)",
-              }}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs text-white/60 font-medium">Live Transcription</span>
-                {isTranscribing && (
-                  <div className="flex items-center gap-1">
-                    <div className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                )}
-              </div>
-              <p className="text-sm text-white/80 leading-relaxed">
-                {liveTranscription || "Start speaking to see live transcription..."}
-              </p>
-            </div>
-          </div>
-        )}
-        
         <div
           className="flex items-center gap-6 px-6 py-4 rounded-2xl backdrop-blur-3xl border border-white/15 shadow-xl"
           style={{
