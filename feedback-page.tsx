@@ -162,14 +162,17 @@ const tabIcons = {
 interface FeedbackPageProps {
   onBack?: () => void
   onPracticeAgain?: () => void
+  questions?: any[]
+  userAnswers?: {[key: number]: string}
 }
 
-export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPageProps) {
+export default function FeedbackPage({ onBack, onPracticeAgain, questions = [], userAnswers = {} }: FeedbackPageProps) {
   const [activeTab, setActiveTab] = useState("Product Sense")
   const [isLoaded, setIsLoaded] = useState(false)
   const [reviewProgress, setReviewProgress] = useState(0)
   const [viewedTabs, setViewedTabs] = useState<Set<string>>(new Set(["Product Sense"]))
   const [expandedSamples, setExpandedSamples] = useState<Set<number>>(new Set())
+  const [expandedUserAnswers, setExpandedUserAnswers] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     setIsLoaded(true)
@@ -193,6 +196,21 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
       return newSet
     })
   }
+
+  const toggleUserAnswer = (questionId: number) => {
+    setExpandedUserAnswers((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(questionId)) {
+        newSet.delete(questionId)
+      } else {
+        newSet.add(questionId)
+      }
+      return newSet
+    })
+  }
+
+  // Use the actual questions passed from the interview or fallback to feedbackData
+  const questionsToDisplay = questions.length > 0 ? questions : feedbackData
 
   return (
     <div
@@ -308,9 +326,13 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
 
           {/* Question Cards with staggered entrance animations */}
           <div className="space-y-6">
-            {feedbackData.map((item, index) => (
+            {questionsToDisplay.map((item, index) => {
+              const questionId = item.id || index + 1
+              const userAnswer = userAnswers[index] || ""
+              
+              return (
               <div
-                key={item.id}
+                key={questionId}
                 className={`rounded-2xl backdrop-blur-3xl border border-white/15 shadow-xl relative overflow-hidden hover:border-white/25 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group ${
                   isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                 }`}
@@ -329,24 +351,24 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="px-3 py-1.5 rounded-full bg-blue-500/20 border border-blue-500/30">
-                        <div className="text-sm text-blue-300 font-medium">{item.type}</div>
+                        <div className="text-sm text-blue-300 font-medium">{item.question_type || item.type}</div>
                       </div>
                     </div>
                     <div className="text-sm text-white/50 font-medium flex items-center gap-1">
-                      {item.id}/{feedbackData.length}
+                      {index + 1}/{questionsToDisplay.length}
                       <ChevronRight className="w-3 h-3 opacity-50" />
                     </div>
                   </div>
 
                   {/* Question Text */}
                   <div className="space-y-4">
-                    <h3 className="text-xl font-medium text-white leading-relaxed">{item.question}</h3>
+                    <h3 className="text-xl font-medium text-white leading-relaxed">{item.question_text || item.question}</h3>
                   </div>
 
                   <div className="space-y-6">
                     {/* Enhanced Feedback Tabs */}
                     <div className="flex flex-wrap gap-2">
-                      {Object.keys(item.insights).map((tab) => {
+                      {Object.keys(item.insights || feedbackData[0]?.insights || {}).map((tab) => {
                         const Icon = tabIcons[tab as keyof typeof tabIcons]
                         const isActive = activeTab === tab
                         const isViewed = viewedTabs.has(tab)
@@ -364,14 +386,14 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
                                   }
                                 : {}
                             }
-                            title={item.insights[tab as keyof typeof item.insights].explanation}
+                            title={(item.insights || feedbackData[0]?.insights)?.[tab as keyof typeof (item.insights || feedbackData[0]?.insights)]?.explanation}
                           >
                             <Icon
                               className={`w-4 h-4 transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
                             />
                             {tab}
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 w-64 text-center">
-                              {item.insights[tab as keyof typeof item.insights].explanation}
+                              {(item.insights || feedbackData[0]?.insights)?.[tab as keyof typeof (item.insights || feedbackData[0]?.insights)]?.explanation}
                               <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                             </div>
                           </button>
@@ -391,14 +413,57 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
                           className="text-white/80 leading-relaxed text-sm rounded-xl p-4 border border-white/10 hover:border-white/15 transition-all duration-300"
                           style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
                         >
-                          {item.insights[activeTab as keyof typeof item.insights].feedback}
+                          {(item.insights || feedbackData[0]?.insights)?.[activeTab as keyof typeof (item.insights || feedbackData[0]?.insights)]?.feedback}
                         </div>
                       </div>
                     </div>
 
+                    {/* Your Answer Section */}
+                    {userAnswer && (
+                      <div className="border-t border-white/10 pt-6">
+                        <button
+                          onClick={() => toggleUserAnswer(questionId)}
+                          className="flex items-center justify-between w-full text-left group rounded-lg p-3 transition-all duration-200"
+                          style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                            <span className="text-sm font-medium text-white/60 group-hover:text-white/80 transition-colors">
+                              Your answer
+                            </span>
+                          </div>
+                          <ChevronRight
+                            className={`w-4 h-4 text-white/40 group-hover:text-white/60 transition-all duration-200 ${
+                              expandedUserAnswers.has(questionId) ? "rotate-90" : ""
+                            }`}
+                          />
+                        </button>
+
+                        {/* Expandable User Answer Content */}
+                        <div
+                          className={`overflow-hidden transition-all duration-300 ease-out ${
+                            expandedUserAnswers.has(questionId) ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
+                          }`}
+                        >
+                          <div className="pt-4 space-y-4">
+                            {/* User Answer Content */}
+                            <div
+                              className="text-sm text-white/60 leading-relaxed p-4 rounded-lg border border-white/10 hover:border-white/15 transition-colors duration-200"
+                              style={{
+                                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                              }}
+                            >
+                              {userAnswer}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sample Answer Section */}
                     <div className="border-t border-white/10 pt-6">
                       <button
-                        onClick={() => toggleSampleAnswer(item.id)}
+                        onClick={() => toggleSampleAnswer(questionId)}
                         className="flex items-center justify-between w-full text-left group rounded-lg p-3 transition-all duration-200"
                         style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
                       >
@@ -410,7 +475,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
                         </div>
                         <ChevronRight
                           className={`w-4 h-4 text-white/40 group-hover:text-white/60 transition-all duration-200 ${
-                            expandedSamples.has(item.id) ? "rotate-90" : ""
+                            expandedSamples.has(questionId) ? "rotate-90" : ""
                           }`}
                         />
                       </button>
@@ -418,7 +483,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
                       {/* Expandable Sample Answer Content */}
                       <div
                         className={`overflow-hidden transition-all duration-300 ease-out ${
-                          expandedSamples.has(item.id) ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
+                          expandedSamples.has(questionId) ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
                         }`}
                       >
                         <div className="pt-4 space-y-4">
@@ -426,7 +491,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
                           <div className="flex items-center gap-2 px-3">
                             <div className="w-4 h-0.5 bg-white/30 rounded-full" />
                             <span className="text-xs font-medium text-white/70 tracking-wide uppercase">
-                              {sampleAnswers[item.id as keyof typeof sampleAnswers].title}
+                              {sampleAnswers[questionId as keyof typeof sampleAnswers]?.title || "Strong Sample Answer"}
                             </span>
                           </div>
 
@@ -437,7 +502,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
                               backgroundColor: "rgba(255, 255, 255, 0.05)",
                             }}
                           >
-                            {sampleAnswers[item.id as keyof typeof sampleAnswers].content}
+                            {sampleAnswers[questionId as keyof typeof sampleAnswers]?.content || "Sample answer not available for this question."}
                           </div>
 
                           {/* Key Strengths */}
@@ -446,7 +511,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
                               Key Strengths
                             </div>
                             <div className="flex flex-wrap gap-1.5">
-                              {sampleAnswers[item.id as keyof typeof sampleAnswers].keyStrengths.map(
+                              {(sampleAnswers[questionId as keyof typeof sampleAnswers]?.keyStrengths || []).map(
                                 (strength, strengthIndex) => (
                                   <span
                                     key={strengthIndex}
@@ -468,7 +533,8 @@ export default function FeedbackPage({ onBack, onPracticeAgain }: FeedbackPagePr
                   </div>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
