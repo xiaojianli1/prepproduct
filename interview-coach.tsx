@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 interface InterviewCoachProps {
   questions: any[]
   onBack?: () => void
-  onEndSession?: () => void
+  onEndSession?: (userAnswers: {[key: number]: string}) => void
 }
 
 export default function Component({ questions, onBack, onEndSession }: InterviewCoachProps) {
@@ -22,6 +22,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const [audioChunks, setAudioChunks] = useState<Blob[]>([])
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [liveTranscription, setLiveTranscription] = useState("")
+  const [userAnswers, setUserAnswers] = useState<{[key: number]: string}>({})
 
   // Use ref to store frozen waveform to avoid dependency issues
   const frozenWaveformRef = useRef(Array(20).fill(0))
@@ -97,7 +98,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
     }
     resetRecordingState()
     cleanupMediaResources()
-    onEndSession?.()
+    onEndSession?.(userAnswers)
   }
 
   // Timer effect
@@ -310,8 +311,12 @@ export default function Component({ questions, onBack, onEndSession }: Interview
       
       if (transcription.trim()) {
         console.log('Final transcription:', transcription)
-        // Here you could save the transcription to your database
-        // or pass it to a parent component
+        
+        // Save transcription to userAnswers state
+        setUserAnswers(prev => ({
+          ...prev,
+          [currentQuestionIndex]: transcription
+        }))
         
         if (isForNextQuestion) {
           // Show final transcription briefly before moving to next question
