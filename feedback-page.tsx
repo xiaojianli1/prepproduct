@@ -209,6 +209,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
       }
       return newSet
     })
+  }
 
   return (
     <div
