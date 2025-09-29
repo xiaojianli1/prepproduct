@@ -24,7 +24,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const [liveTranscription, setLiveTranscription] = useState("")
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [transcriptionStatus, setTranscriptionStatus] = useState("")
-  const [audioLevel, setAudioLevel] = useState(0)
+  const [userAnswers, setUserAnswers] = useState<{[key: number]: string}>({})
 
   // Use ref to store frozen waveform to avoid dependency issues
   const frozenWaveformRef = useRef(Array(20).fill(0))
@@ -103,7 +103,8 @@ export default function Component({ questions, onBack, onEndSession }: Interview
     }
     resetRecordingState()
     cleanupMediaResources()
-    onEndSession?.()
+    // Pass user answers to the feedback page
+    onEndSession?.(userAnswers)
   }
 
   // Timer effect
@@ -250,7 +251,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
       
       // Get final transcription
       if (audioChunks.length > 0) {
-        getFinalTranscription(isForNextQuestion)
+        getFinalTranscription(isForNextQuestion, currentQuestionIndex)
       } else {
         setTranscriptionStatus("No audio data captured")
       }
@@ -341,7 +342,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   }
 
 
-  const getFinalTranscription = async (isForNextQuestion: boolean) => {
+  const getFinalTranscription = async (isForNextQuestion: boolean, questionIndex: number) => {
     if (audioChunks.length === 0) return
     
     setFinalTranscribing(true)
@@ -355,8 +356,12 @@ export default function Component({ questions, onBack, onEndSession }: Interview
       if (transcription.trim()) {
         console.log('Final transcription:', transcription)
         setTranscriptionStatus("Transcription complete!")
-        // Here you could save the transcription to your database
-        // or pass it to a parent component
+        
+        // Store the user's answer for this question
+        setUserAnswers(prev => ({
+          ...prev,
+          [questionIndex]: transcription
+        }))
         
         if (isForNextQuestion) {
           // Show final transcription briefly before moving to next question
@@ -465,45 +470,6 @@ export default function Component({ questions, onBack, onEndSession }: Interview
               <div className="text-xs text-white/60 font-medium tracking-wide">
                 {currentQuestionIndex + 1} of {totalQuestions}
               </div>
-            </div>
-            <div className="flex-1 space-y-3">
-              {/* Question Type and Difficulty Tags */}
-              <div className="flex items-center gap-2 mb-3">
-                <span
-                  className="px-3 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: "rgba(0, 122, 255, 0.2)",
-                    color: "#007AFF",
-                  }}
-                >
-                  {currentQuestion.question_type}
-                </span>
-                <span
-                  className="px-3 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: currentQuestion.difficulty_level?.toLowerCase() === 'beginner' ? "rgba(34, 197, 94, 0.2)" : 
-                                   currentQuestion.difficulty_level?.toLowerCase() === 'intermediate' ? "rgba(251, 191, 36, 0.2)" : 
-                                   "rgba(239, 68, 68, 0.2)",
-                    color: currentQuestion.difficulty_level?.toLowerCase() === 'beginner' ? "#22C55E" : 
-                           currentQuestion.difficulty_level?.toLowerCase() === 'intermediate' ? "#FBBF24" : 
-                           "#EF4444",
-                  }}
-                >
-                  {currentQuestion.difficulty_level}
-                </span>
-                <span
-                  className="px-3 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: "rgba(156, 163, 175, 0.2)",
-                    color: "#9CA3AF",
-                  }}
-                >
-                  {currentQuestion.company}
-                </span>
-              </div>
-              <h1 className="text-lg font-semibold text-white leading-relaxed tracking-tight">
-                {currentQuestion.question_text}
-              </h1>
             </div>
           </div>
         </div>

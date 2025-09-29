@@ -13,6 +13,7 @@ export default function App() {
   const [loadingText, setLoadingText] = useState("")
   const [selectedQuestions, setSelectedQuestions] = useState<any[]>([])
   const [jobDescription, setJobDescription] = useState("")
+  const [userAnswers, setUserAnswers] = useState<{[key: number]: string}>({})
 
   const handleTransition = (targetScreen: "resume" | "selection" | "interview" | "feedback", text: string) => {
     setIsLoading(true)
@@ -42,7 +43,10 @@ export default function App() {
     setCurrentScreen("selection")
   }
 
-  const handleEndSession = () => {
+  const handleEndSession = (answers?: {[key: number]: string}) => {
+    if (answers) {
+      setUserAnswers(answers)
+    }
     handleTransition("feedback", "Processing your responses...")
   }
 
@@ -67,4 +71,10 @@ export default function App() {
   }
 
   return <FeedbackPage onBack={handleBackToSelection} onPracticeAgain={handlePracticeAgain} />
+  return <FeedbackPage 
+    onBack={handleBackToSelection} 
+    onPracticeAgain={handlePracticeAgain} 
+    questions={selectedQuestions}
+    userAnswers={userAnswers}
+  />
 }
