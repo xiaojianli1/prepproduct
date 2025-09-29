@@ -166,12 +166,27 @@ interface FeedbackPageProps {
   questions?: any[]
 }
 
-export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers, questions }: FeedbackPageProps) {
+export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}, questions = [] }: FeedbackPageProps) {
   const [activeTab, setActiveTab] = useState("Product Sense")
   const [isLoaded, setIsLoaded] = useState(false)
   const [reviewProgress, setReviewProgress] = useState(0)
   const [viewedTabs, setViewedTabs] = useState<Set<string>>(new Set(["Product Sense"]))
   const [expandedSamples, setExpandedSamples] = useState<Set<number>>(new Set())
+  const [expandedAnswers, setExpandedAnswers] = useState<Set<number>>(new Set())
+
+  const questionsToDisplay = questions.length > 0 ? questions : feedbackData
+
+  const toggleUserAnswer = (index: number) => {
+    setExpandedAnswers((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(index)) {
+        newSet.delete(index)
+      } else {
+        newSet.add(index)
+      }
+      return newSet
+    })
+  }
 
   useEffect(() => {
     setIsLoaded(true)
@@ -310,9 +325,9 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers, que
 
           {/* Question Cards with staggered entrance animations */}
           <div className="space-y-6">
-            {feedbackData.map((item, index) => (
+            {questionsToDisplay.map((item, index) => (
               <div
-                key={item.id}
+                key={item.id || index}
                 className={`rounded-2xl backdrop-blur-3xl border border-white/15 shadow-xl relative overflow-hidden hover:border-white/25 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group ${
                   isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                 }`}
@@ -335,72 +350,119 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers, que
                       </div>
                     </div>
                     <div className="text-sm text-white/50 font-medium flex items-center gap-1">
-                      {item.id}/{feedbackData.length}
+                      {index + 1}/{questionsToDisplay.length}
                       <ChevronRight className="w-3 h-3 opacity-50" />
                     </div>
                   </div>
 
                   {/* Question Text */}
                   <div className="space-y-4">
-                    <h3 className="text-xl font-medium text-white leading-relaxed">{item.question_text}</h3>
+                    <h3 className="text-xl font-medium text-white leading-relaxed">{item.question_text || item.question}</h3>
                   </div>
 
                   <div className="space-y-6">
                     {/* Enhanced Feedback Tabs */}
                     <div className="flex flex-wrap gap-2">
-                      {Object.keys(item.insights).map((tab) => {
+                      {Object.keys(item.insights || {}).map((tab) => {
                         const Icon = tabIcons[tab as keyof typeof tabIcons]
                         const isActive = activeTab === tab
                         const isViewed = viewedTabs.has(tab)
                         return (
-                          <button
-                            key={tab}
-                            onClick={() => handleTabChange(tab)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 cursor-pointer relative overflow-hidden group ${
-                              isActive ? "bg-blue-500 text-white shadow-lg" : "text-white/60 hover:text-white/80"
-                            }`}
-                            style={
-                              isActive
-                                ? {
-                                    boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
-                                  }
-                                : {}
-                            }
-                            title={item.insights[tab as keyof typeof item.insights].explanation}
-                          >
-                            <Icon
-                              className={`w-4 h-4 transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
-                            />
-                            {tab}
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 w-64 text-center">
-                              {item.insights[tab as keyof typeof item.insights].explanation}
+                          <div key={tab} className="relative group">
+                            <button
+                              onClick={() => handleTabChange(tab)}
+                              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 cursor-pointer relative overflow-hidden group ${
+                                isActive ? "bg-blue-500 text-white shadow-lg" : "text-white/60 hover:text-white/80"
+                              }`}
+                              style={
+                                isActive
+                                  ? {
+                                      boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+                                    }
+                                  : {}
+                              }
+                              title={item.insights?.[tab as keyof typeof item.insights]?.explanation}
+                            >
+                              <Icon
+                                className={`w-4 h-4 transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
+                              />
+                              {tab}
+                            </button>
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap max-w-xs">
+                              {item.insights?.[tab as keyof typeof item.insights]?.explanation}
                               <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                             </div>
-                          </button>
+                          </div>
                         )
                       })}
                     </div>
 
-                    {/* Enhanced feedback section */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-0.5 bg-blue-500 rounded-full" />
-                        <span className="text-sm font-medium text-white/80 tracking-wide">Feedback</span>
-                      </div>
-
+                    {/* Enhanced feedback section - only show if insights exist */}
+                    {item.insights && (
                       <div className="space-y-4">
-                        <div
-                          className="text-white/80 leading-relaxed text-sm rounded-xl p-4 border border-white/10 hover:border-white/15 transition-all duration-300"
-                          style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
-                        >
-                          {item.insights[activeTab as keyof typeof item.insights].feedback}
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-0.5 bg-blue-500 rounded-full" />
+                          <span className="text-sm font-medium text-white/80 tracking-wide">Feedback</span>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div
+                            className="text-white/80 leading-relaxed text-sm rounded-xl p-4 border border-white/10 hover:border-white/15 transition-all duration-300"
+                            style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+                          >
+                            {item.insights[activeTab as keyof typeof item.insights]?.feedback}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
+                    {/* Your Answer Section */}
                     <div className="border-t border-white/10 pt-6">
                       <button
-                        onClick={() => toggleSampleAnswer(item.id)}
+                        onClick={() => toggleUserAnswer(index)}
+                        className="flex items-center justify-between w-full text-left group rounded-lg p-3 transition-all duration-200 mb-4"
+                        style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                          <span className="text-sm font-medium text-white/60 group-hover:text-white/80 transition-colors">
+                            Your answer
+                          </span>
+                        </div>
+                        <ChevronRight
+                          className={`w-4 h-4 text-white/40 group-hover:text-white/60 transition-all duration-200 ${
+                            expandedAnswers.has(index) ? "rotate-90" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {/* Expandable User Answer Content */}
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-out mb-4 ${
+                          expandedAnswers.has(index) ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        <div className="pt-4 space-y-4">
+                          {/* User Answer Content */}
+                          <div
+                            className="text-sm leading-relaxed p-4 rounded-lg border border-white/10 hover:border-white/15 transition-colors duration-200"
+                            style={{
+                              backgroundColor: "rgba(255, 255, 255, 0.05)",
+                            }}
+                          >
+                            {userAnswers[index] ? (
+                              <span className="text-white/70">{userAnswers[index]}</span>
+                            ) : (
+                              <span className="text-white/50 italic">No answer recorded</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sample Answer Section */}
+                      <button
+                        onClick={() => toggleSampleAnswer(item.id || index)}
                         className="flex items-center justify-between w-full text-left group rounded-lg p-3 transition-all duration-200"
                         style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
                       >
@@ -412,7 +474,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers, que
                         </div>
                         <ChevronRight
                           className={`w-4 h-4 text-white/40 group-hover:text-white/60 transition-all duration-200 ${
-                            expandedSamples.has(item.id) ? "rotate-90" : ""
+                            expandedSamples.has(item.id || index) ? "rotate-90" : ""
                           }`}
                         />
                       </button>
@@ -420,15 +482,15 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers, que
                       {/* Expandable Sample Answer Content */}
                       <div
                         className={`overflow-hidden transition-all duration-300 ease-out ${
-                          expandedSamples.has(item.id) ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
+                          expandedSamples.has(item.id || index) ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
                         }`}
                       >
                         <div className="pt-4 space-y-4">
                           {/* Sample Answer Header */}
                           <div className="flex items-center gap-2 px-3">
                             <div className="w-4 h-0.5 bg-white/30 rounded-full" />
-                            <span className="text-xs font-medium text-white/70 tracking-wide uppercase">
-                              {sampleAnswers[item.id as keyof typeof sampleAnswers].title}
+                            <span className="text-xs font-medium text-white/50 uppercase tracking-wider">
+                              {sampleAnswers[item.id as keyof typeof sampleAnswers]?.title || "Sample Answer"}
                             </span>
                           </div>
 
@@ -439,7 +501,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers, que
                               backgroundColor: "rgba(255, 255, 255, 0.05)",
                             }}
                           >
-                            {sampleAnswers[item.id as keyof typeof sampleAnswers].content}
+                            {sampleAnswers[item.id as keyof typeof sampleAnswers]?.content || "Sample answer not available"}
                           </div>
 
                           {/* Key Strengths */}
@@ -447,8 +509,8 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers, que
                             <div className="text-xs font-medium text-white/50 uppercase tracking-wider">
                               Key Strengths
                             </div>
-                            <div className="flex flex-wrap gap-1.5">
-                              {sampleAnswers[item.id as keyof typeof sampleAnswers].keyStrengths.map(
+                            <div className="flex flex-wrap gap-2">
+                              {(sampleAnswers[item.id as keyof typeof sampleAnswers]?.keyStrengths || []).map(
                                 (strength, strengthIndex) => (
                                   <span
                                     key={strengthIndex}
