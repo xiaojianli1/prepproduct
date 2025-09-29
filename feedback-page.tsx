@@ -362,9 +362,9 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
 
                   <div className="space-y-6">
                     {/* Enhanced Feedback Tabs - only show if insights exist */}
-                    {item.insights && (
+                    {(item.insights || feedbackData[0]?.insights) && (
                       <div className="flex flex-wrap gap-2">
-                        {Object.keys(item.insights).map((tab) => {
+                        {Object.keys(item.insights || feedbackData[0]?.insights || {}).map((tab) => {
                           const Icon = tabIcons[tab as keyof typeof tabIcons]
                           const isActive = activeTab === tab
                           const isViewed = viewedTabs.has(tab)
@@ -382,7 +382,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                                       }
                                     : {}
                                 }
-                                title={item.insights[tab as keyof typeof item.insights]?.explanation}
+                                title={(item.insights || feedbackData[0]?.insights)?.[tab as keyof typeof (item.insights || feedbackData[0]?.insights)]?.explanation}
                               >
                                 <Icon
                                   className={`w-4 h-4 transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
@@ -391,7 +391,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                               </button>
                               {/* Tooltip */}
                               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap max-w-xs">
-                                {item.insights[tab as keyof typeof item.insights]?.explanation}
+                                {(item.insights || feedbackData[0]?.insights)?.[tab as keyof typeof (item.insights || feedbackData[0]?.insights)]?.explanation}
                                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                               </div>
                             </div>
@@ -401,7 +401,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                     )}
 
                     {/* Enhanced feedback section - only show if insights exist */}
-                    {item.insights && (
+                    {(item.insights || feedbackData[0]?.insights) && (
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-0.5 bg-blue-500 rounded-full" />
@@ -413,7 +413,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                             className="text-white/80 leading-relaxed text-sm rounded-xl p-4 border border-white/10 hover:border-white/15 transition-all duration-300"
                             style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
                           >
-                            {item.insights[activeTab as keyof typeof item.insights]?.feedback}
+                            {(item.insights || feedbackData[0]?.insights)?.[activeTab as keyof typeof (item.insights || feedbackData[0]?.insights)]?.feedback}
                           </div>
                         </div>
                       </div>
