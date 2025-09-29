@@ -165,13 +165,13 @@ interface FeedbackPageProps {
   userAnswers?: {[key: number]: string}
   questions?: any[]
 }
-export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}, questions = [] }: FeedbackPageProps) {
+
+export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers, questions }: FeedbackPageProps) {
   const [activeTab, setActiveTab] = useState("Product Sense")
   const [isLoaded, setIsLoaded] = useState(false)
   const [reviewProgress, setReviewProgress] = useState(0)
   const [viewedTabs, setViewedTabs] = useState<Set<string>>(new Set(["Product Sense"]))
   const [expandedSamples, setExpandedSamples] = useState<Set<number>>(new Set())
-  const [expandedAnswers, setExpandedAnswers] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     setIsLoaded(true)
@@ -342,12 +342,12 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
 
                   {/* Question Text */}
                   <div className="space-y-4">
-                    <h3 className="text-xl font-medium text-white leading-relaxed">{item.question}</h3>
+                    <h3 className="text-xl font-medium text-white leading-relaxed">{item.question_text}</h3>
                   </div>
 
                   <div className="space-y-6">
                     {/* Enhanced Feedback Tabs */}
-                        {Object.keys(item.insights || {}).map((tab) => {
+                    <div className="flex flex-wrap gap-2">
                       {Object.keys(item.insights).map((tab) => {
                         const Icon = tabIcons[tab as keyof typeof tabIcons]
                         const isActive = activeTab === tab
@@ -365,14 +365,14 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                                     boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
                                   }
                                 : {}
-                              title={item.insights?.[tab as keyof typeof item.insights]?.explanation}
+                            }
                             title={item.insights[tab as keyof typeof item.insights].explanation}
                           >
-              {questionsToDisplay.map((item, index) => (
+                            <Icon
                               className={`w-4 h-4 transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
-                  key={item.id || index}
+                            />
                             {tab}
-                                {item.insights?.[tab as keyof typeof item.insights]?.explanation}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 w-64 text-center">
                               {item.insights[tab as keyof typeof item.insights].explanation}
                               <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                             </div>
@@ -380,72 +380,26 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                         )
                       })}
                     </div>
+
+                    {/* Enhanced feedback section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-0.5 bg-blue-500 rounded-full" />
+                        <span className="text-sm font-medium text-white/80 tracking-wide">Feedback</span>
                       </div>
-                      {/* Enhanced feedback section - only show if insights exist */}
-                      {item.insights && (
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-0.5 bg-blue-500 rounded-full" />
-                            <span className="text-sm font-medium text-white/80 tracking-wide">Feedback</span>
-                        {index + 1}/{questionsToDisplay.length}
 
-                          <div className="space-y-4">
-                            <div
-                              className="text-white/80 leading-relaxed text-sm rounded-xl p-4 border border-white/10 hover:border-white/15 transition-all duration-300"
-                              style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
-                            >
-                              {item.insights[activeTab as keyof typeof item.insights]?.feedback}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                        {/* Your Answer Section */}
-                        <button
-                          onClick={() => toggleUserAnswer(index)}
-                          className="flex items-center justify-between w-full text-left group rounded-lg p-3 transition-all duration-200 mb-4"
+                      <div className="space-y-4">
+                        <div
+                          className="text-white/80 leading-relaxed text-sm rounded-xl p-4 border border-white/10 hover:border-white/15 transition-all duration-300"
                           style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
-                            <span className="text-sm font-medium text-white/60 group-hover:text-white/80 transition-colors">
-                              Your answer
-                            </span>
-                          </div>
-                          <ChevronRight
-                            className={`w-4 h-4 text-white/40 group-hover:text-white/60 transition-all duration-200 ${
-                              expandedAnswers.has(index) ? "rotate-90" : ""
-                            }`}
-                          />
-                        </button>
-
-                        {/* Expandable User Answer Content */}
-                        <div
-                          className={`overflow-hidden transition-all duration-300 ease-out mb-4 ${
-                            expandedAnswers.has(index) ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
-                          }`}
-                        >
-                          <div className="pt-4 space-y-4">
-                            {/* User Answer Content */}
-                            <div
-                              className="text-sm leading-relaxed p-4 rounded-lg border border-white/10 hover:border-white/15 transition-colors duration-200"
-                              style={{
-                                backgroundColor: "rgba(255, 255, 255, 0.05)",
-                              }}
-                            >
-                              {userAnswers[index] ? (
-                                <span className="text-white/70">{userAnswers[index]}</span>
-                              ) : (
-                                <span className="text-white/50 italic">No answer recorded</span>
-                              )}
-                            </div>
-                          </div>
+                          {item.insights[activeTab as keyof typeof item.insights].feedback}
                         </div>
+                      </div>
+                    </div>
 
-                        {/* Sample Answer Section */}
                     <div className="border-t border-white/10 pt-6">
-                          onClick={() => toggleSampleAnswer(item.id || index)}
+                      <button
                         onClick={() => toggleSampleAnswer(item.id)}
                         className="flex items-center justify-between w-full text-left group rounded-lg p-3 transition-all duration-200"
                         style={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
@@ -457,7 +411,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                           </span>
                         </div>
                         <ChevronRight
-                              expandedSamples.has(item.id || index) ? "rotate-90" : ""
+                          className={`w-4 h-4 text-white/40 group-hover:text-white/60 transition-all duration-200 ${
                             expandedSamples.has(item.id) ? "rotate-90" : ""
                           }`}
                         />
@@ -465,7 +419,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
 
                       {/* Expandable Sample Answer Content */}
                       <div
-                            expandedSamples.has(item.id || index) ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
+                        className={`overflow-hidden transition-all duration-300 ease-out ${
                           expandedSamples.has(item.id) ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
                         }`}
                       >
@@ -473,7 +427,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                           {/* Sample Answer Header */}
                           <div className="flex items-center gap-2 px-3">
                             <div className="w-4 h-0.5 bg-white/30 rounded-full" />
-                                {sampleAnswers[item.id as keyof typeof sampleAnswers]?.title || "Sample Answer"}
+                            <span className="text-xs font-medium text-white/70 tracking-wide uppercase">
                               {sampleAnswers[item.id as keyof typeof sampleAnswers].title}
                             </span>
                           </div>
@@ -484,7 +438,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                             style={{
                               backgroundColor: "rgba(255, 255, 255, 0.05)",
                             }}
-                              {sampleAnswers[item.id as keyof typeof sampleAnswers]?.content || "Sample answer not available"}
+                          >
                             {sampleAnswers[item.id as keyof typeof sampleAnswers].content}
                           </div>
 
@@ -493,7 +447,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                             <div className="text-xs font-medium text-white/50 uppercase tracking-wider">
                               Key Strengths
                             </div>
-                                {(sampleAnswers[item.id as keyof typeof sampleAnswers]?.keyStrengths || []).map(
+                            <div className="flex flex-wrap gap-1.5">
                               {sampleAnswers[item.id as keyof typeof sampleAnswers].keyStrengths.map(
                                 (strength, strengthIndex) => (
                                   <span
@@ -506,12 +460,12 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                                   >
                                     {strength}
                                   </span>
-                                ),
+                                )
                               )}
                             </div>
                           </div>
                         </div>
-                      <h3 className="text-xl font-medium text-white leading-relaxed">{item.question_text || item.question}</h3>
+                      </div>
                     </div>
                   </div>
                 </div>
