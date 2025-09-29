@@ -70,6 +70,7 @@ export default function App() {
     return <InterviewCoach questions={selectedQuestions} onBack={handleBackToSelection} onEndSession={handleEndSession} />
   }
 
+  return <FeedbackPage onBack={handleBackToSelection} onPracticeAgain={handlePracticeAgain} />
   return <FeedbackPage 
     onBack={handleBackToSelection} 
     onPracticeAgain={handlePracticeAgain} 
