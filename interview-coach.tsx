@@ -22,15 +22,9 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const [audioChunks, setAudioChunks] = useState<Blob[]>([])
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [liveTranscription, setLiveTranscription] = useState("")
-  const [isTranscribing, setIsTranscribing] = useState(false)
-  const [transcriptionStatus, setTranscriptionStatus] = useState("")
-  const [audioLevel, setAudioLevel] = useState(0)
 
   // Use ref to store frozen waveform to avoid dependency issues
   const frozenWaveformRef = useRef(Array(20).fill(0))
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const analyserRef = useRef<AnalyserNode | null>(null)
-  const animationFrameRef = useRef<number>()
 
   // Dynamic max time based on question type
   const getMaxTimeForQuestion = (question: any) => {
@@ -156,7 +150,6 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   // Audio recording functions
   const startRecording = async () => {
     try {
-      setTranscriptionStatus("Requesting microphone access...")
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -165,31 +158,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
         } 
       })
       
-      setTranscriptionStatus("Microphone access granted")
       setStream(mediaStream)
-      
-      // Set up audio analysis for real-time feedback
-      try {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
-        const source = audioContextRef.current.createMediaStreamSource(mediaStream)
-        analyserRef.current = audioContextRef.current.createAnalyser()
-        analyserRef.current.fftSize = 256
-        source.connect(analyserRef.current)
-        
-        // Start monitoring audio levels
-        const monitorAudioLevel = () => {
-          if (analyserRef.current && isRecording) {
-            const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount)
-            analyserRef.current.getByteFrequencyData(dataArray)
-            const average = dataArray.reduce((a, b) => a + b) / dataArray.length
-            setAudioLevel(average)
-            animationFrameRef.current = requestAnimationFrame(monitorAudioLevel)
-          }
-        }
-        monitorAudioLevel()
-      } catch (audioError) {
-        console.warn('Audio analysis setup failed:', audioError)
-      }
       
       const recorder = new MediaRecorder(mediaStream, {
         mimeType: 'audio/webm;codecs=opus'
@@ -201,13 +170,11 @@ export default function Component({ questions, onBack, onEndSession }: Interview
         if (event.data.size > 0) {
           chunks.push(event.data)
           setAudioChunks(prev => [...prev, event.data])
-          console.log('Audio chunk received:', event.data.size, 'bytes')
         }
       }
       
       recorder.onstop = () => {
-        console.log('Recording stopped, total chunks:', chunks.length, 'total size:', chunks.reduce((sum, chunk) => sum + chunk.size, 0), 'bytes')
-        setTranscriptionStatus(`Recording complete: ${chunks.length} chunks captured`)
+        console.log('Recording stopped, chunks:', chunks.length)
       }
       
       recorder.start(1000) // Collect data every second
@@ -217,12 +184,10 @@ export default function Component({ questions, onBack, onEndSession }: Interview
       setIsPaused(false)
       setTimeElapsed(0)
       setLiveTranscription("")
-      setTranscriptionStatus("Recording started - speak now!")
       
       console.log('Recording started successfully')
     } catch (error) {
       console.error('Error starting recording:', error)
-      setTranscriptionStatus(`Error: ${error instanceof Error ? error.message : 'Could not access microphone'}`)
       alert('Could not access microphone. Please check permissions.')
     }
   }
@@ -246,27 +211,15 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const stopRecording = (isForNextQuestion: boolean = false) => {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop()
-      setTranscriptionStatus("Stopping recording...")
       
       // Get final transcription
       if (audioChunks.length > 0) {
         getFinalTranscription(isForNextQuestion)
-      } else {
-        setTranscriptionStatus("No audio data captured")
       }
     }
     
     setIsRecording(false)
     setIsPaused(false)
-    
-    // Clean up audio monitoring
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current)
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close()
-      audioContextRef.current = null
-    }
   }
 
   const resetRecordingState = () => {
@@ -288,21 +241,11 @@ export default function Component({ questions, onBack, onEndSession }: Interview
     if (mediaRecorder) {
       setMediaRecorder(null)
     }
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current)
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close()
-      audioContextRef.current = null
-    }
   }
 
   // Transcription functions
   const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
     try {
-      console.log('Starting transcription for blob:', audioBlob.size, 'bytes')
-      setTranscriptionStatus(`Sending ${(audioBlob.size / 1024).toFixed(1)}KB to OpenAI...`)
-      
       const formData = new FormData()
       formData.append('audio', audioBlob, 'recording.webm')
       
@@ -311,50 +254,62 @@ export default function Component({ questions, onBack, onEndSession }: Interview
         body: formData,
       })
       
-      console.log('Transcription response status:', response.status)
-      
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Transcription API error:', response.status, errorText)
-        setTranscriptionStatus(`API Error: ${response.status}`)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
       const data = await response.json()
-      console.log('Transcription response:', data)
       
       if (data.error) {
-        setTranscriptionStatus(`Transcription Error: ${data.error}`)
         throw new Error(data.error)
       }
       
-      const transcription = data.transcription || ''
-      setTranscriptionStatus(transcription ? `Transcribed: "${transcription.substring(0, 50)}..."` : "No speech detected")
-      console.log('Final transcription:', transcription)
-      
-      return transcription
+      return data.transcription || ''
     } catch (error) {
       console.error('Transcription error:', error)
-      setTranscriptionStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
       return ''
     }
   }
 
+  const startLiveTranscription = async () => {
+    if (audioChunks.length === 0) return
+    
+    setIsTranscribing(true)
+    
+    try {
+      // Use recent chunks for live transcription (last 3 seconds worth)
+      const recentChunks = audioChunks.slice(-3)
+      const audioBlob = new Blob(recentChunks, { type: 'audio/webm;codecs=opus' })
+      
+      if (audioBlob.size > 1000) { // Only transcribe if we have substantial audio
+        const transcription = await transcribeAudio(audioBlob)
+        
+        if (transcription.trim()) {
+          // Keep only last 200 characters to prevent overflow
+          const truncated = transcription.length > 200 
+            ? '...' + transcription.slice(-197)
+            : transcription
+          setLiveTranscription(truncated)
+        }
+      }
+    } catch (error) {
+      console.error('Live transcription error:', error)
+    } finally {
+      setIsTranscribing(false)
+    }
+  }
 
   const getFinalTranscription = async (isForNextQuestion: boolean) => {
     if (audioChunks.length === 0) return
     
     setFinalTranscribing(true)
-    setIsTranscribing(true)
     
     try {
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' })
-      console.log('Creating final transcription blob:', audioBlob.size, 'bytes')
       const transcription = await transcribeAudio(audioBlob)
       
       if (transcription.trim()) {
         console.log('Final transcription:', transcription)
-        setTranscriptionStatus("Transcription complete!")
         // Here you could save the transcription to your database
         // or pass it to a parent component
         
@@ -365,15 +320,11 @@ export default function Component({ questions, onBack, onEndSession }: Interview
             setLiveTranscription("")
           }, 2000)
         }
-      } else {
-        setTranscriptionStatus("No speech detected in recording")
       }
     } catch (error) {
       console.error('Final transcription error:', error)
-      setTranscriptionStatus(`Transcription failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setFinalTranscribing(false)
-      setIsTranscribing(false)
     }
   }
 
@@ -636,45 +587,6 @@ export default function Component({ questions, onBack, onEndSession }: Interview
                 ? "Recording paused - Tap to resume"
                 : "Recording in progress..."}
           </p>
-          
-          {/* Audio Level Indicator */}
-          {isRecording && !isPaused && (
-            <div className="mt-2 flex items-center justify-center gap-2">
-              <span className="text-xs text-white/60">Audio Level:</span>
-              <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-green-500 transition-all duration-100 rounded-full"
-                  style={{ width: `${Math.min(100, (audioLevel / 128) * 100)}%` }}
-                />
-              </div>
-              <span className="text-xs text-white/60">{Math.round((audioLevel / 128) * 100)}%</span>
-            </div>
-          )}
-          
-          {/* Transcription Status */}
-          {transcriptionStatus && (
-            <p className="text-sm text-white/60 mt-2 max-w-md mx-auto">
-              Status: {transcriptionStatus}
-            </p>
-          )}
-          
-          {/* Live Transcription Display */}
-          {liveTranscription && (
-            <div className="mt-4 p-3 bg-white/10 rounded-lg max-w-md mx-auto">
-              <p className="text-xs text-white/60 mb-1">Transcription:</p>
-              <p className="text-sm text-white/90">{liveTranscription}</p>
-            </div>
-          )}
-          
-          {/* Processing Indicator */}
-          {(isTranscribing || finalTranscribing) && (
-            <div className="mt-2 flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm text-blue-400">
-                {finalTranscribing ? "Processing final transcription..." : "Transcribing..."}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
