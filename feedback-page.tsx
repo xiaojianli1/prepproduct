@@ -66,7 +66,6 @@ export default function FeedbackPage({ onBack, onPracticeAgain, questions = [], 
   const questionsToDisplay = questions.length > 0 ? questions : feedbackData
 
   return (
-  return (
     <div
       className="min-h-screen flex flex-col relative overflow-hidden"
       style={{
