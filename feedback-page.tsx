@@ -537,12 +537,6 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.6; }
-        }
-      `}</style>
     </div>
   )
 }

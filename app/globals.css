@@ -130,3 +130,8 @@
     @apply bg-background text-foreground font-sans;
   }
 }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.6; }
+}
