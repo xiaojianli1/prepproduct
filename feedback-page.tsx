@@ -369,10 +369,10 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                         const isActive = activeTab === tab
                         const isViewed = viewedTabs.has(tab)
                         return (
-                          <div key={tab} className="relative group">
+                          <div key={tab} className="relative group/tab">
                             <button
                               onClick={() => handleTabChange(tab)}
-                              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 cursor-pointer relative overflow-hidden group ${
+                              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 cursor-pointer relative overflow-hidden ${
                                 isActive ? "bg-blue-500 text-white shadow-lg" : "text-white/60 hover:text-white/80"
                               }`}
                               style={
@@ -382,7 +382,6 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                                     }
                                   : {}
                               }
-                              title={item.insights?.[tab as keyof typeof item.insights]?.explanation}
                             >
                               <Icon
                                 className={`w-4 h-4 transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
@@ -390,7 +389,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                               {tab}
                             </button>
                             {/* Tooltip */}
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap max-w-xs">
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover/tab:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-normal max-w-xs text-center">
                               {item.insights?.[tab as keyof typeof item.insights]?.explanation}
                               <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                             </div>
