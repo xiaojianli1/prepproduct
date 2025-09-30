@@ -174,7 +174,8 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
   const [expandedSamples, setExpandedSamples] = useState<Set<number>>(new Set())
   const [expandedAnswers, setExpandedAnswers] = useState<Set<number>>(new Set())
 
-  const questionsToDisplay = questions.length > 0 ? questions : feedbackData
+  // Use sample feedback data if passed questions don't have insights
+  const questionsToDisplay = questions.length > 0 && questions[0]?.insights ? questions : feedbackData
 
   const toggleUserAnswer = (index: number) => {
     setExpandedAnswers((prev) => {

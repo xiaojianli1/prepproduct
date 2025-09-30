@@ -2,14 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || 'sk-placeholder',
 })
 
 export async function POST(request: NextRequest) {
   try {
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-placeholder') {
+      return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 })
+    }
+
     const formData = await request.formData()
     const audioFile = formData.get('audio') as File
-    
+
     if (!audioFile) {
       return NextResponse.json({ error: 'No audio file provided' }, { status: 400 })
     }
@@ -17,7 +21,7 @@ export async function POST(request: NextRequest) {
     // Convert File to the format OpenAI expects
     const audioBuffer = await audioFile.arrayBuffer()
     const audioBlob = new Blob([audioBuffer], { type: audioFile.type })
-    
+
     // Create a File object that OpenAI can process
     const file = new File([audioBlob], 'audio.webm', { type: audioFile.type })
 
@@ -28,9 +32,9 @@ export async function POST(request: NextRequest) {
       response_format: 'text'
     })
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       transcription: transcription,
-      success: true 
+      success: true
     })
 
   } catch (error) {
