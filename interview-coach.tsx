@@ -59,16 +59,25 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   }
 
   // Handle next question with smooth transition
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     // Stop recording and get final transcription
+    let finalAnswers = { ...userAnswers }
+
     if (isRecording) {
-      stopRecording(true) // true indicates this is for next question
+      const transcription = await stopAndTranscribe()
+      if (transcription) {
+        finalAnswers = {
+          ...finalAnswers,
+          [currentQuestionIndex]: transcription
+        }
+        setUserAnswers(finalAnswers)
+      }
     }
 
     if (currentQuestionIndex >= totalQuestions - 1) {
-      // Last question - could show completion screen
-      console.log("All questions completed!")
-      onEndSession?.()
+      // Last question - pass userAnswers to parent
+      console.log("All questions completed! User answers:", finalAnswers)
+      onEndSession?.(finalAnswers)
       return
     }
 
@@ -92,14 +101,24 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   }
 
   // Handle end session
-  const handleEndSession = () => {
+  const handleEndSession = async () => {
     console.log("End session clicked")
+    let finalAnswers = { ...userAnswers }
+
     if (isRecording) {
-      stopRecording(false) // false indicates this is for ending session
+      const transcription = await stopAndTranscribe()
+      if (transcription) {
+        finalAnswers = {
+          ...finalAnswers,
+          [currentQuestionIndex]: transcription
+        }
+        setUserAnswers(finalAnswers)
+      }
     }
+
     resetRecordingState()
     cleanupMediaResources()
-    onEndSession?.(userAnswers)
+    onEndSession?.(finalAnswers)
   }
 
   // Timer effect
@@ -305,19 +324,19 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const getFinalTranscription = async (isForNextQuestion: boolean) => {
     if (audioChunks.length === 0) {
       console.log('No audio chunks available for transcription')
-      return
+      return ''
     }
-    
+
     setFinalTranscribing(true)
     console.log('Starting final transcription with', audioChunks.length, 'chunks')
-    
+
     try {
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' })
       console.log('Audio blob size:', audioBlob.size, 'bytes')
-      
+
       const transcription = await transcribeAudio(audioBlob)
       console.log('Received transcription:', transcription)
-      
+
       if (transcription.trim()) {
         // Save transcription to userAnswers state
         setUserAnswers(prev => ({
@@ -325,7 +344,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
           [currentQuestionIndex]: transcription
         }))
         console.log('Saved answer for question', currentQuestionIndex, ':', transcription)
-        
+
         if (isForNextQuestion) {
           // Show final transcription briefly before moving to next question
           setLiveTranscription(transcription)
@@ -333,13 +352,36 @@ export default function Component({ questions, onBack, onEndSession }: Interview
             setLiveTranscription("")
           }, 2000)
         }
+
+        return transcription
       }
+      return ''
     } catch (error) {
       console.error('Final transcription error:', error)
       alert('Transcription failed. Please check your internet connection and try again.')
+      return ''
     } finally {
       setFinalTranscribing(false)
     }
+  }
+
+  // Stop recording and get transcription synchronously
+  const stopAndTranscribe = async (): Promise<string> => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop()
+      setIsRecording(false)
+      setIsPaused(false)
+
+      // Wait for chunks to be collected
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // Get transcription
+      if (audioChunks.length > 0) {
+        const transcription = await getFinalTranscription(false)
+        return transcription
+      }
+    }
+    return ''
   }
 
   // Cleanup on unmount
