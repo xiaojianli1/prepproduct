@@ -266,8 +266,8 @@ interface FeedbackPageProps {
 }
 
 export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}, questions = [] }: FeedbackPageProps) {
-  // Use sample feedback data if passed questions don't have insights
-  const questionsToDisplay = questions.length > 0 && questions[0]?.insights ? questions : feedbackData
+  // Use passed questions if available, otherwise fall back to sample data
+  const questionsToDisplay = questions.length > 0 ? questions : feedbackData
 
   // Get the first question's categories to initialize the active tab
   const firstQuestion = questionsToDisplay[0]
@@ -609,31 +609,33 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                               backgroundColor: "rgba(255, 255, 255, 0.05)",
                             }}
                           >
-                            {sampleAnswers[item.id as keyof typeof sampleAnswers]?.content || "Sample answer not available"}
+                            {item.sample_answer || sampleAnswers[item.id as keyof typeof sampleAnswers]?.content || "Sample answer not available"}
                           </div>
 
-                          {/* Key Strengths */}
-                          <div className="space-y-2 px-3">
-                            <div className="text-xs font-medium text-white/50 uppercase tracking-wider">
-                              Key Strengths
+                          {/* Key Strengths - only show for sample data */}
+                          {sampleAnswers[item.id as keyof typeof sampleAnswers]?.keyStrengths && (
+                            <div className="space-y-2 px-3">
+                              <div className="text-xs font-medium text-white/50 uppercase tracking-wider">
+                                Key Strengths
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {(sampleAnswers[item.id as keyof typeof sampleAnswers]?.keyStrengths || []).map(
+                                  (strength, strengthIndex) => (
+                                    <span
+                                      key={strengthIndex}
+                                      className="px-2 py-1 rounded-md text-xs font-medium border border-white/20 hover:border-white/30 transition-colors duration-200"
+                                      style={{
+                                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                        color: "rgba(255, 255, 255, 0.7)",
+                                      }}
+                                    >
+                                      {strength}
+                                    </span>
+                                  )
+                                )}
+                              </div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                              {(sampleAnswers[item.id as keyof typeof sampleAnswers]?.keyStrengths || []).map(
-                                (strength, strengthIndex) => (
-                                  <span
-                                    key={strengthIndex}
-                                    className="px-2 py-1 rounded-md text-xs font-medium border border-white/20 hover:border-white/30 transition-colors duration-200"
-                                    style={{
-                                      backgroundColor: "rgba(255, 255, 255, 0.05)",
-                                      color: "rgba(255, 255, 255, 0.7)",
-                                    }}
-                                  >
-                                    {strength}
-                                  </span>
-                                )
-                              )}
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </div>
                     </div>
