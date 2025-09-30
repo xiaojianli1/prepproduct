@@ -22,6 +22,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   const [audioChunks, setAudioChunks] = useState<Blob[]>([])
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [liveTranscription, setLiveTranscription] = useState("")
+  const [isTranscribing, setIsTranscribing] = useState(false)
   const [userAnswers, setUserAnswers] = useState<{[key: number]: string}>({})
 
   // Use ref to store frozen waveform to avoid dependency issues
@@ -214,9 +215,10 @@ export default function Component({ questions, onBack, onEndSession }: Interview
       mediaRecorder.stop()
       
       // Get final transcription
-      if (audioChunks.length > 0) {
+      // Wait a moment for final chunks to be collected
+      setTimeout(() => {
         getFinalTranscription(isForNextQuestion)
-      }
+      }, 100)
     }
     
     setIsRecording(false)
@@ -301,22 +303,28 @@ export default function Component({ questions, onBack, onEndSession }: Interview
   }
 
   const getFinalTranscription = async (isForNextQuestion: boolean) => {
-    if (audioChunks.length === 0) return
+    if (audioChunks.length === 0) {
+      console.log('No audio chunks available for transcription')
+      return
+    }
     
     setFinalTranscribing(true)
+    console.log('Starting final transcription with', audioChunks.length, 'chunks')
     
     try {
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' })
+      console.log('Audio blob size:', audioBlob.size, 'bytes')
+      
       const transcription = await transcribeAudio(audioBlob)
+      console.log('Received transcription:', transcription)
       
       if (transcription.trim()) {
-        console.log('Final transcription:', transcription)
-        
         // Save transcription to userAnswers state
         setUserAnswers(prev => ({
           ...prev,
           [currentQuestionIndex]: transcription
         }))
+        console.log('Saved answer for question', currentQuestionIndex, ':', transcription)
         
         if (isForNextQuestion) {
           // Show final transcription briefly before moving to next question
@@ -328,6 +336,7 @@ export default function Component({ questions, onBack, onEndSession }: Interview
       }
     } catch (error) {
       console.error('Final transcription error:', error)
+      alert('Transcription failed. Please check your internet connection and try again.')
     } finally {
       setFinalTranscribing(false)
     }
@@ -339,6 +348,24 @@ export default function Component({ questions, onBack, onEndSession }: Interview
       cleanupMediaResources()
     }
   }, [])
+
+  // Live transcription effect - transcribe every few seconds while recording
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    
+    if (isRecording && !isPaused && audioChunks.length > 0) {
+      interval = setInterval(() => {
+        startLiveTranscription()
+      }, 3000) // Transcribe every 3 seconds
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval)
+      }
+    }
+  }, [isRecording, isPaused, audioChunks.length])
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
