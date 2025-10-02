@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, CircleCheck as CheckCircle, Download, RotateCcw, Lightbulb, ChartBar as BarChart3, Clock, User, ChevronRight, Users, MessageSquare, Target, Heart, Layers, Brain, Briefcase, TrendingUp } from "lucide-react"
+import { ArrowLeft, CircleCheck as CheckCircle, Download, RotateCcw, Lightbulb, ChartBar as BarChart3, Clock, User, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 // Sample feedback data for each question
@@ -152,110 +152,11 @@ const sampleAnswers = {
   },
 }
 
-// Get feedback categories based on question type
-const getFeedbackCategories = (questionType: string) => {
-  const normalizedType = questionType?.toLowerCase() || ''
-
-  // Behavioral questions
-  if (normalizedType.includes('behavioral')) {
-    return {
-      "Product Sense": {
-        icon: Lightbulb,
-        explanation: "This evaluates your understanding of user needs, market dynamics, and business impact when making product decisions."
-      },
-      "Collaboration & Leadership": {
-        icon: Users,
-        explanation: "This assesses your ability to work cross-functionally, influence stakeholders, and lead teams effectively."
-      },
-      "Communication Clarity": {
-        icon: MessageSquare,
-        explanation: "This measures how clearly and effectively you articulate your thoughts, ideas, and decisions."
-      },
-      "Impact": {
-        icon: Target,
-        explanation: "This evaluates the measurable outcomes and business value created by your actions."
-      }
-    }
-  }
-
-  // Product design questions
-  if (normalizedType.includes('product design')) {
-    return {
-      "Product Sense": {
-        icon: Lightbulb,
-        explanation: "This evaluates your understanding of user needs, market dynamics, and business impact when making product decisions."
-      },
-      "User Empathy": {
-        icon: Heart,
-        explanation: "This assesses your ability to understand and prioritize user needs and pain points."
-      },
-      "Feature Prioritization": {
-        icon: Layers,
-        explanation: "This measures how effectively you prioritize features based on impact, effort, and strategic alignment."
-      },
-      "Structure": {
-        icon: BarChart3,
-        explanation: "This measures how well you organized your response using clear frameworks and logical flow."
-      }
-    }
-  }
-
-  // Analytical questions (root cause analysis and metrics & goal-setting)
-  if (normalizedType.includes('root cause analysis') || normalizedType.includes('metrics') || normalizedType.includes('goal-setting')) {
-    return {
-      "Critical Thinking": {
-        icon: Brain,
-        explanation: "This evaluates your ability to analyze problems systematically and think through complex scenarios."
-      },
-      "Business Context": {
-        icon: Briefcase,
-        explanation: "This assesses your understanding of business objectives, constraints, and strategic alignment."
-      },
-      "Data & Metrics": {
-        icon: TrendingUp,
-        explanation: "This measures your ability to identify, track, and interpret relevant metrics and data."
-      },
-      "Structure": {
-        icon: BarChart3,
-        explanation: "This measures how well you organized your response using clear frameworks and logical flow."
-      }
-    }
-  }
-
-  // Default fallback (behavioral categories)
-  return {
-    "Product Sense": {
-      icon: Lightbulb,
-      explanation: "This evaluates your understanding of user needs, market dynamics, and business impact when making product decisions."
-    },
-    "Collaboration & Leadership": {
-      icon: Users,
-      explanation: "This assesses your ability to work cross-functionally, influence stakeholders, and lead teams effectively."
-    },
-    "Communication Clarity": {
-      icon: MessageSquare,
-      explanation: "This measures how clearly and effectively you articulate your thoughts, ideas, and decisions."
-    },
-    "Impact": {
-      icon: Target,
-      explanation: "This evaluates the measurable outcomes and business value created by your actions."
-    }
-  }
-}
-
 const tabIcons = {
   "Product Sense": Lightbulb,
   Structure: BarChart3,
   Conciseness: Clock,
   Personalization: User,
-  "Collaboration & Leadership": Users,
-  "Communication Clarity": MessageSquare,
-  "Impact": Target,
-  "User Empathy": Heart,
-  "Feature Prioritization": Layers,
-  "Critical Thinking": Brain,
-  "Business Context": Briefcase,
-  "Data & Metrics": TrendingUp,
 }
 
 interface FeedbackPageProps {
@@ -266,20 +167,15 @@ interface FeedbackPageProps {
 }
 
 export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}, questions = [] }: FeedbackPageProps) {
-  // Use sample feedback data if passed questions don't have insights
-  const questionsToDisplay = questions.length > 0 && questions[0]?.insights ? questions : feedbackData
-
-  // Get the first question's categories to initialize the active tab
-  const firstQuestion = questionsToDisplay[0]
-  const firstQuestionCategories = getFeedbackCategories(firstQuestion?.question_type || firstQuestion?.type || '')
-  const firstCategoryName = Object.keys(firstQuestionCategories)[0]
-
-  const [activeTab, setActiveTab] = useState(firstCategoryName)
+  const [activeTab, setActiveTab] = useState("Product Sense")
   const [isLoaded, setIsLoaded] = useState(false)
   const [reviewProgress, setReviewProgress] = useState(0)
-  const [viewedTabs, setViewedTabs] = useState<Set<string>>(new Set([firstCategoryName]))
+  const [viewedTabs, setViewedTabs] = useState<Set<string>>(new Set(["Product Sense"]))
   const [expandedSamples, setExpandedSamples] = useState<Set<number>>(new Set())
   const [expandedAnswers, setExpandedAnswers] = useState<Set<number>>(new Set())
+
+  // Use sample feedback data if passed questions don't have insights
+  const questionsToDisplay = questions.length > 0 && questions[0]?.insights ? questions : feedbackData
 
   const toggleUserAnswer = (index: number) => {
     setExpandedAnswers((prev) => {
@@ -295,9 +191,9 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
 
   useEffect(() => {
     setIsLoaded(true)
-    const totalTabs = Object.keys(firstQuestionCategories).length
+    const totalTabs = Object.keys(feedbackData[0].insights).length // 4 unique tabs
     setReviewProgress((viewedTabs.size / totalTabs) * 100)
-  }, [viewedTabs, firstQuestionCategories])
+  }, [viewedTabs])
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)
@@ -430,11 +326,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
 
           {/* Question Cards with staggered entrance animations */}
           <div className="space-y-6">
-            {questionsToDisplay.map((item, index) => {
-              // Get dynamic categories for this question
-              const questionCategories = getFeedbackCategories(item.question_type || item.type || '')
-
-              return (
+            {questionsToDisplay.map((item, index) => (
               <div
                 key={item.id || index}
                 className={`rounded-2xl backdrop-blur-3xl border border-white/15 shadow-xl relative overflow-hidden hover:border-white/25 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] group ${
@@ -455,7 +347,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="px-3 py-1.5 rounded-full bg-blue-500/20 border border-blue-500/30">
-                        <div className="text-sm text-blue-300 font-medium">{item.question_type || item.type}</div>
+                        <div className="text-sm text-blue-300 font-medium">{item.type}</div>
                       </div>
                     </div>
                     <div className="text-sm text-white/50 font-medium flex items-center gap-1">
@@ -472,14 +364,14 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                   <div className="space-y-6">
                     {/* Enhanced Feedback Tabs */}
                     <div className="flex flex-wrap gap-2">
-                      {Object.entries(questionCategories).map(([categoryName, categoryInfo]) => {
-                        const Icon = categoryInfo.icon
-                        const isActive = activeTab === categoryName
-                        const isViewed = viewedTabs.has(categoryName)
+                      {Object.keys(item.insights || {}).map((tab) => {
+                        const Icon = tabIcons[tab as keyof typeof tabIcons]
+                        const isActive = activeTab === tab
+                        const isViewed = viewedTabs.has(tab)
                         return (
-                          <div key={categoryName} className="relative group/tab">
+                          <div key={tab} className="relative group/tab">
                             <button
-                              onClick={() => handleTabChange(categoryName)}
+                              onClick={() => handleTabChange(tab)}
                               className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 cursor-pointer relative overflow-hidden ${
                                 isActive ? "bg-blue-500 text-white shadow-lg" : "text-white/60 hover:text-white/80"
                               }`}
@@ -494,11 +386,11 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                               <Icon
                                 className={`w-4 h-4 transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
                               />
-                              {categoryName}
+                              {tab}
                             </button>
                             {/* Tooltip */}
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover/tab:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-normal max-w-xs text-center">
-                              {categoryInfo.explanation}
+                              {item.insights?.[tab as keyof typeof item.insights]?.explanation}
                               <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                             </div>
                           </div>
@@ -640,8 +532,7 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
                   </div>
                 </div>
               </div>
-              )
-            })}
+            ))}
           </div>
         </div>
       </div>
