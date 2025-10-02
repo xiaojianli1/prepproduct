@@ -154,9 +154,77 @@ const sampleAnswers = {
 
 const tabIcons = {
   "Product Sense": Lightbulb,
+  "User Empathy": User,
+  "Feature Prioritization": BarChart3,
+  "Collaboration & Leadership": User,
+  "Communication Clarity": Lightbulb,
+  Impact: BarChart3,
+  "Critical Thinking": Lightbulb,
+  "Business Context": BarChart3,
+  "Data & Metrics": BarChart3,
   Structure: BarChart3,
   Conciseness: Clock,
   Personalization: User,
+}
+
+const feedbackCategoriesByType: { [key: string]: string[] } = {
+  behavioral: ["Product Sense", "Collaboration & Leadership", "Communication Clarity", "Impact"],
+  "product design": ["Product Sense", "User Empathy", "Feature Prioritization", "Structure"],
+  "root cause analysis": ["Critical Thinking", "Business Context", "Data & Metrics", "Structure"],
+  "metrics & goal-setting": ["Critical Thinking", "Business Context", "Data & Metrics", "Structure"],
+}
+
+const mockFeedbackByCategory: { [key: string]: any } = {
+  "Product Sense": {
+    explanation: "This evaluates your understanding of user needs, market dynamics, and business impact when making product decisions.",
+    feedback: "Strong demonstration of product thinking and user-centric approach. You effectively articulated the trade-offs and showed clear understanding of user needs hierarchy. Consider adding specific metrics or user research data to strengthen your response further.",
+    highlights: ["User-centric thinking", "Trade-off analysis", "Market awareness"],
+  },
+  "User Empathy": {
+    explanation: "This assesses your ability to understand and advocate for user needs, pain points, and experiences.",
+    feedback: "Good demonstration of user-centered design thinking. You showed awareness of different user segments and their needs. To improve, consider discussing specific user research methods or sharing concrete examples of user feedback you incorporated.",
+    highlights: ["User perspective", "Empathy for pain points", "User research awareness"],
+  },
+  "Feature Prioritization": {
+    explanation: "This measures your ability to prioritize features based on impact, effort, and strategic alignment.",
+    feedback: "Solid prioritization framework with clear criteria. You demonstrated understanding of impact vs. effort trade-offs. Consider mentioning specific prioritization frameworks like RICE or Kano model to add more structure to your approach.",
+    highlights: ["Impact assessment", "Resource consideration", "Strategic alignment"],
+  },
+  "Collaboration & Leadership": {
+    explanation: "This evaluates your ability to work cross-functionally and demonstrate leadership in collaborative environments.",
+    feedback: "Strong examples of cross-functional collaboration. You effectively communicated how you influenced stakeholders and drove alignment. Consider elaborating on how you handled conflicts or disagreements within the team.",
+    highlights: ["Cross-team collaboration", "Stakeholder management", "Influence without authority"],
+  },
+  "Communication Clarity": {
+    explanation: "This assesses how clearly and effectively you communicate complex ideas to different audiences.",
+    feedback: "Clear and articulate communication throughout your response. You structured your thoughts well and made complex concepts accessible. To enhance further, consider tailoring your communication style to different audience types.",
+    highlights: ["Clear articulation", "Structured thinking", "Logical flow"],
+  },
+  Impact: {
+    explanation: "This looks at your ability to drive meaningful business outcomes and measure the impact of your work.",
+    feedback: "Good focus on measurable outcomes and business impact. You connected your actions to tangible results. To strengthen this, add more specific metrics and quantify the impact wherever possible.",
+    highlights: ["Results-driven", "Quantifiable metrics", "Business outcomes"],
+  },
+  "Critical Thinking": {
+    explanation: "This measures your analytical approach to breaking down complex problems and identifying root causes.",
+    feedback: "Demonstrated strong analytical capabilities and systematic problem-solving. You broke down the problem effectively into manageable components. Consider exploring alternative hypotheses and explaining why you prioritized certain analytical paths.",
+    highlights: ["Problem decomposition", "Analytical rigor", "Hypothesis-driven approach"],
+  },
+  "Business Context": {
+    explanation: "This evaluates your understanding of broader business strategy, market dynamics, and competitive landscape.",
+    feedback: "Solid grasp of business fundamentals and strategic context. You connected your analysis to broader business objectives. To improve, consider discussing competitive dynamics or market trends that influenced your thinking.",
+    highlights: ["Strategic awareness", "Business acumen", "Market understanding"],
+  },
+  "Data & Metrics": {
+    explanation: "This assesses your ability to leverage data for decision-making and define appropriate success metrics.",
+    feedback: "Good use of data and metrics to support your reasoning. You identified relevant KPIs and understood their relationships. Consider discussing data quality, collection methods, or potential limitations in your analysis.",
+    highlights: ["Data-driven decisions", "Metric selection", "Quantitative analysis"],
+  },
+  Structure: {
+    explanation: "This measures how well you organized your response using clear frameworks and logical flow.",
+    feedback: "Well-structured response with clear progression from problem to solution. You followed a logical framework throughout. Consider making your framework more explicit by naming it or calling out key transitions.",
+    highlights: ["Logical organization", "Framework usage", "Clear progression"],
+  },
 }
 
 interface FeedbackPageProps {
@@ -174,8 +242,28 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
   const [expandedSamples, setExpandedSamples] = useState<Set<number>>(new Set())
   const [expandedAnswers, setExpandedAnswers] = useState<Set<number>>(new Set())
 
-  // Use sample feedback data if passed questions don't have insights
-  const questionsToDisplay = questions.length > 0 && questions[0]?.insights ? questions : feedbackData
+  const generateDynamicInsights = (question: any) => {
+    const questionType = question.question_type?.toLowerCase() || 'behavioral'
+    const categories = feedbackCategoriesByType[questionType] || feedbackCategoriesByType.behavioral
+
+    const insights: { [key: string]: any } = {}
+    categories.forEach(category => {
+      insights[category] = mockFeedbackByCategory[category]
+    })
+
+    return insights
+  }
+
+  const processQuestionsWithInsights = (questions: any[]) => {
+    return questions.map(question => ({
+      ...question,
+      insights: generateDynamicInsights(question)
+    }))
+  }
+
+  const questionsToDisplay = questions.length > 0
+    ? processQuestionsWithInsights(questions)
+    : feedbackData
 
   const toggleUserAnswer = (index: number) => {
     setExpandedAnswers((prev) => {
@@ -191,8 +279,21 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
 
   useEffect(() => {
     setIsLoaded(true)
-    const totalTabs = Object.keys(feedbackData[0].insights).length // 4 unique tabs
-    setReviewProgress((viewedTabs.size / totalTabs) * 100)
+    if (questionsToDisplay.length > 0 && questionsToDisplay[0]?.insights) {
+      const firstCategory = Object.keys(questionsToDisplay[0].insights)[0]
+      setActiveTab(firstCategory)
+      setViewedTabs(new Set([firstCategory]))
+
+      const totalTabs = Object.keys(questionsToDisplay[0].insights).length
+      setReviewProgress((viewedTabs.size / totalTabs) * 100)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (questionsToDisplay.length > 0 && questionsToDisplay[0]?.insights) {
+      const totalTabs = Object.keys(questionsToDisplay[0].insights).length
+      setReviewProgress((viewedTabs.size / totalTabs) * 100)
+    }
   }, [viewedTabs])
 
   const handleTabChange = (tab: string) => {
