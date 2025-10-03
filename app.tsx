@@ -48,7 +48,6 @@ export default function App() {
   }
 
   const handleEndSessionWithAnswers = (userAnswers: {[key: number]: string}) => {
-    // Store user answers for feedback page
     setUserAnswers(userAnswers)
     handleTransition("feedback", "Processing your responses...")
   }

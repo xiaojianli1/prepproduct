@@ -337,13 +337,11 @@ export default function Component({ questions, onBack, onEndSession }: Interview
       const transcription = await transcribeAudio(audioBlob)
       console.log('Received transcription:', transcription)
 
-      if (transcription.trim()) {
-        // Save transcription to userAnswers state
+      if (transcription && transcription.trim()) {
         setUserAnswers(prev => ({
           ...prev,
           [currentQuestionIndex]: transcription
         }))
-        console.log('Saved answer for question', currentQuestionIndex, ':', transcription)
 
         if (isForNextQuestion) {
           // Show final transcription briefly before moving to next question
@@ -354,11 +352,12 @@ export default function Component({ questions, onBack, onEndSession }: Interview
         }
 
         return transcription
+      } else {
+        console.warn('Transcription was empty or failed')
+        return ''
       }
-      return ''
     } catch (error) {
       console.error('Final transcription error:', error)
-      alert('Transcription failed. Please check your internet connection and try again.')
       return ''
     } finally {
       setFinalTranscribing(false)
