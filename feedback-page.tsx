@@ -255,6 +255,12 @@ interface FeedbackPageProps {
 }
 
 export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}, questions = [] }: FeedbackPageProps) {
+  console.log('=== FeedbackPage RENDERED ===')
+  console.log('Received userAnswers:', userAnswers)
+  console.log('Number of answers:', Object.keys(userAnswers).length)
+  console.log('Keys in userAnswers:', Object.keys(userAnswers))
+  console.log('Received questions count:', questions.length)
+
   const questionsWithDynamicFeedback = questions.length > 0
     ? questions.map(question => {
         const questionType = question.question_type?.toLowerCase() || 'behavioral'

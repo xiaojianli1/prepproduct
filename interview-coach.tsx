@@ -60,16 +60,21 @@ export default function Component({ questions, onBack, onEndSession }: Interview
 
   // Handle next question with smooth transition
   const handleNextQuestion = async () => {
+    console.log('handleNextQuestion - Current userAnswers state:', userAnswers)
+    console.log('handleNextQuestion - Current question index:', currentQuestionIndex)
     // Stop recording and get final transcription
     let finalAnswers = { ...userAnswers }
 
     if (isRecording) {
+      console.log('Recording active, stopping and transcribing...')
       const transcription = await stopAndTranscribe()
+      console.log('Received transcription from stopAndTranscribe:', transcription)
       if (transcription) {
         finalAnswers = {
           ...finalAnswers,
           [currentQuestionIndex]: transcription
         }
+        console.log('Updated finalAnswers:', finalAnswers)
         setUserAnswers(finalAnswers)
       }
     }
@@ -102,19 +107,29 @@ export default function Component({ questions, onBack, onEndSession }: Interview
 
   // Handle end session
   const handleEndSession = async () => {
+    console.log('=== handleEndSession CALLED ===')
+    console.log('Current userAnswers state:', userAnswers)
+    console.log('Current question index:', currentQuestionIndex)
     console.log("End session clicked")
     let finalAnswers = { ...userAnswers }
 
     if (isRecording) {
+      console.log('Recording active, stopping and transcribing before ending...')
       const transcription = await stopAndTranscribe()
+      console.log('Received transcription from stopAndTranscribe:', transcription)
       if (transcription) {
         finalAnswers = {
           ...finalAnswers,
           [currentQuestionIndex]: transcription
         }
+        console.log('Updated finalAnswers with current recording:', finalAnswers)
         setUserAnswers(finalAnswers)
       }
     }
+
+    console.log('=== FINAL: Passing answers to parent ===')
+    console.log('finalAnswers object:', finalAnswers)
+    console.log('Number of answers:', Object.keys(finalAnswers).length)
 
     resetRecordingState()
     cleanupMediaResources()
@@ -267,28 +282,38 @@ export default function Component({ questions, onBack, onEndSession }: Interview
 
   // Transcription functions
   const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
+    console.log('transcribeAudio - Starting transcription, blob size:', audioBlob.size)
     try {
       const formData = new FormData()
       formData.append('audio', audioBlob, 'recording.webm')
-      
+
+      console.log('transcribeAudio - Sending request to /api/transcribe')
       const response = await fetch('/api/transcribe', {
         method: 'POST',
         body: formData,
       })
-      
+
+      console.log('transcribeAudio - Response status:', response.status)
+
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('transcribeAudio - Error response:', errorText)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      
+
       const data = await response.json()
-      
+      console.log('transcribeAudio - Response data:', data)
+
       if (data.error) {
+        console.error('transcribeAudio - API returned error:', data.error)
         throw new Error(data.error)
       }
-      
-      return data.transcription || ''
+
+      const transcription = data.transcription || ''
+      console.log('transcribeAudio - Final transcription result:', transcription)
+      return transcription
     } catch (error) {
-      console.error('Transcription error:', error)
+      console.error('transcribeAudio - Exception caught:', error)
       return ''
     }
   }
@@ -366,19 +391,31 @@ export default function Component({ questions, onBack, onEndSession }: Interview
 
   // Stop recording and get transcription synchronously
   const stopAndTranscribe = async (): Promise<string> => {
+    console.log('stopAndTranscribe - Called')
+    console.log('stopAndTranscribe - mediaRecorder state:', mediaRecorder?.state)
+    console.log('stopAndTranscribe - audioChunks length:', audioChunks.length)
+
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      console.log('stopAndTranscribe - Stopping media recorder')
       mediaRecorder.stop()
       setIsRecording(false)
       setIsPaused(false)
 
       // Wait for chunks to be collected
       await new Promise(resolve => setTimeout(resolve, 100))
+      console.log('stopAndTranscribe - After waiting, audioChunks length:', audioChunks.length)
 
       // Get transcription
       if (audioChunks.length > 0) {
+        console.log('stopAndTranscribe - Getting final transcription')
         const transcription = await getFinalTranscription(false)
+        console.log('stopAndTranscribe - Returning transcription:', transcription)
         return transcription
+      } else {
+        console.warn('stopAndTranscribe - No audio chunks available')
       }
+    } else {
+      console.warn('stopAndTranscribe - MediaRecorder not active or not available')
     }
     return ''
   }
