@@ -157,6 +157,94 @@ const tabIcons = {
   Structure: BarChart3,
   Conciseness: Clock,
   Personalization: User,
+  "Collaboration & Leadership": User,
+  "Communication Clarity": User,
+  Impact: BarChart3,
+  "User Empathy": User,
+  "Feature Prioritization": Lightbulb,
+  "Critical Thinking": Lightbulb,
+  "Business Context": BarChart3,
+  "Data & Metrics": BarChart3,
+}
+
+const feedbackCategoryMapping: { [key: string]: string[] } = {
+  behavioral: [
+    "Product Sense",
+    "Collaboration & Leadership",
+    "Communication Clarity",
+    "Impact",
+  ],
+  "product design": [
+    "Product Sense",
+    "User Empathy",
+    "Feature Prioritization",
+    "Structure",
+  ],
+  "Root Cause Analysis": [
+    "Critical Thinking",
+    "Business Context",
+    "Data & Metrics",
+    "Structure",
+  ],
+  "metrics & goal-setting": [
+    "Critical Thinking",
+    "Business Context",
+    "Data & Metrics",
+    "Structure",
+  ],
+}
+
+const mockFeedbackData: { [key: string]: { explanation: string; feedback: string; highlights: string[] } } = {
+  "Product Sense": {
+    explanation: "This evaluates your understanding of user needs, market dynamics, and business impact when making product decisions.",
+    feedback: "Strong demonstration of prioritization frameworks and user-centric thinking. You effectively showed clear understanding of user needs hierarchy. Consider mentioning specific metrics or user research that informed your decisions.",
+    highlights: ["User-centric prioritization", "Framework usage", "Resource constraint management"]
+  },
+  "Collaboration & Leadership": {
+    explanation: "This assesses your ability to work with cross-functional teams and demonstrate leadership in ambiguous situations.",
+    feedback: "You demonstrated solid cross-functional collaboration and took initiative in driving the project forward. Consider highlighting specific examples of how you influenced stakeholders or resolved conflicts within the team.",
+    highlights: ["Cross-team coordination", "Stakeholder management", "Initiative taking"]
+  },
+  "Communication Clarity": {
+    explanation: "This evaluates how clearly and concisely you communicate complex ideas to different audiences.",
+    feedback: "Your response was well-structured and easy to follow. You used clear language and avoided unnecessary jargon. To improve further, consider tailoring your communication style to different stakeholder audiences.",
+    highlights: ["Clear articulation", "Logical flow", "Audience awareness"]
+  },
+  Impact: {
+    explanation: "This measures your ability to identify and articulate the business impact and outcomes of your work.",
+    feedback: "Good use of metrics to quantify impact. You connected your actions to business outcomes effectively. Consider expanding on the long-term impact and how you measured success over time.",
+    highlights: ["Quantifiable results", "Business metrics", "Outcome-focused"]
+  },
+  "User Empathy": {
+    explanation: "This assesses your ability to understand and advocate for user needs throughout the product development process.",
+    feedback: "You showed strong understanding of user pain points and demonstrated empathy in your approach. Consider including more specific examples of user research or feedback that informed your decisions.",
+    highlights: ["User pain point identification", "Research-backed decisions", "User-centric approach"]
+  },
+  "Feature Prioritization": {
+    explanation: "This evaluates your framework and methodology for prioritizing features and making trade-off decisions.",
+    feedback: "Solid use of prioritization frameworks. You clearly articulated trade-offs and decision criteria. To strengthen further, consider discussing how you balanced short-term wins with long-term strategic goals.",
+    highlights: ["Framework application", "Trade-off analysis", "Strategic thinking"]
+  },
+  Structure: {
+    explanation: "This measures how well you organized your response using clear frameworks and logical flow.",
+    feedback: "Clear logical structure with specific examples. Your response followed a logical progression from problem identification to solution implementation. The decision-making process was well articulated.",
+    highlights: ["Logical flow", "Clear timeline", "Structured approach"]
+  },
+  "Critical Thinking": {
+    explanation: "This assesses your ability to analyze complex problems, identify root causes, and think systematically.",
+    feedback: "You demonstrated strong analytical skills and systematic thinking. Your approach to breaking down the problem was methodical. Consider diving deeper into alternative hypotheses and how you validated your assumptions.",
+    highlights: ["Systematic analysis", "Root cause identification", "Hypothesis testing"]
+  },
+  "Business Context": {
+    explanation: "This evaluates your understanding of broader business dynamics, market forces, and strategic implications.",
+    feedback: "Good awareness of business context and market dynamics. You connected your analysis to broader business goals. To improve, consider discussing competitive landscape and industry trends that influenced your thinking.",
+    highlights: ["Business alignment", "Market awareness", "Strategic thinking"]
+  },
+  "Data & Metrics": {
+    explanation: "This measures your ability to leverage data, define meaningful metrics, and use quantitative analysis effectively.",
+    feedback: "Strong use of data and metrics to support your analysis. You identified relevant KPIs and showed comfort with quantitative reasoning. Consider discussing data quality, assumptions, and limitations of your analysis.",
+    highlights: ["Data-driven approach", "Metric definition", "Quantitative analysis"]
+  },
 }
 
 interface FeedbackPageProps {
@@ -167,15 +255,35 @@ interface FeedbackPageProps {
 }
 
 export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}, questions = [] }: FeedbackPageProps) {
-  const [activeTab, setActiveTab] = useState("Product Sense")
+  const questionsWithDynamicFeedback = questions.length > 0
+    ? questions.map(question => {
+        const questionType = question.question_type?.toLowerCase() || 'behavioral'
+        const categories = feedbackCategoryMapping[questionType] || feedbackCategoryMapping.behavioral
+
+        const dynamicInsights: { [key: string]: { explanation: string; feedback: string; highlights: string[] } } = {}
+        categories.forEach(category => {
+          dynamicInsights[category] = mockFeedbackData[category]
+        })
+
+        return {
+          ...question,
+          insights: dynamicInsights
+        }
+      })
+    : feedbackData
+
+  const questionsToDisplay = questionsWithDynamicFeedback
+
+  const firstQuestionType = questionsToDisplay[0]?.question_type?.toLowerCase() || 'behavioral'
+  const firstCategories = feedbackCategoryMapping[firstQuestionType] || feedbackCategoryMapping.behavioral
+  const initialTab = firstCategories[0] || "Product Sense"
+
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [isLoaded, setIsLoaded] = useState(false)
   const [reviewProgress, setReviewProgress] = useState(0)
-  const [viewedTabs, setViewedTabs] = useState<Set<string>>(new Set(["Product Sense"]))
+  const [viewedTabs, setViewedTabs] = useState<Set<string>>(new Set([initialTab]))
   const [expandedSamples, setExpandedSamples] = useState<Set<number>>(new Set())
   const [expandedAnswers, setExpandedAnswers] = useState<Set<number>>(new Set())
-
-  // Use sample feedback data if passed questions don't have insights
-  const questionsToDisplay = questions.length > 0 && questions[0]?.insights ? questions : feedbackData
 
   const toggleUserAnswer = (index: number) => {
     setExpandedAnswers((prev) => {
@@ -191,9 +299,9 @@ export default function FeedbackPage({ onBack, onPracticeAgain, userAnswers = {}
 
   useEffect(() => {
     setIsLoaded(true)
-    const totalTabs = Object.keys(feedbackData[0].insights).length // 4 unique tabs
+    const totalTabs = Object.keys(questionsToDisplay[0]?.insights || {}).length
     setReviewProgress((viewedTabs.size / totalTabs) * 100)
-  }, [viewedTabs])
+  }, [viewedTabs, questionsToDisplay])
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)
