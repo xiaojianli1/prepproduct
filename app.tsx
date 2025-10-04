@@ -48,10 +48,7 @@ export default function App() {
   }
 
   const handleEndSessionWithAnswers = (userAnswers: {[key: number]: string}) => {
-    console.log('=== App.tsx handleEndSessionWithAnswers CALLED ===')
-    console.log('Received userAnswers from interview:', userAnswers)
-    console.log('Number of answers received:', Object.keys(userAnswers).length)
-    console.log('Keys in userAnswers:', Object.keys(userAnswers))
+    // Store user answers for feedback page
     setUserAnswers(userAnswers)
     handleTransition("feedback", "Processing your responses...")
   }
